@@ -14,27 +14,27 @@ class BottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Colors.transparent,
-            Color(0xFF1B2838).withOpacity(0.2),
-          ],
-        ),
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: Offset(0, -2),
+          ),
+        ],
       ),
       child: BottomNavigationBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
         elevation: 0,
         currentIndex: currentIndex,
         onTap: onTap,
-        selectedItemColor: Colors.white,
-        unselectedItemColor: Colors.white,
+        selectedItemColor: Colors.black,
+        unselectedItemColor: Colors.grey,
         type: BottomNavigationBarType.fixed,
         showSelectedLabels: true,
         showUnselectedLabels: true,
-        selectedLabelStyle: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
-        unselectedLabelStyle: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+        selectedLabelStyle: TextStyle(color: Colors.black, fontWeight: FontWeight.w600),
+        unselectedLabelStyle: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),

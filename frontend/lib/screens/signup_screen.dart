@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../services/api_service.dart';
 import 'home_screen.dart';
 import 'login_screen.dart';
 
@@ -17,39 +15,40 @@ class _SignUpScreenState extends State<SignUpScreen> {
   bool _isLoading = false;
 
   /// ✅ Handles user registration
+  final ApiService _apiService = ApiService();
+
   Future<void> _registerUser() async {
+    if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
+      setState(() {
+        _errorMessage = "Please enter both username and password";
+      });
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
-    final response = await http.post(
-      Uri.parse("http://10.0.2.2:5000/auth/register"),
-      headers: {"Content-Type": "application/json"},
-      body: json.encode({
-        "username": _usernameController.text,
-        "password": _passwordController.text,
-      }),
-    );
-
-    final data = json.decode(response.body);
-    setState(() {
-      _isLoading = false;
-    });
-
-    if (response.statusCode == 409) {
-      setState(() {
-        _errorMessage = "Username already taken. Choose a different one.";
-      });
-    } else if (response.statusCode == 200) {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setInt("user_id", data["user_id"]); // ✅ Save login state
-
+    try {
+      await _apiService.registerUser(_usernameController.text, _passwordController.text);
+      
+      // If registration successful, navigate to home
       Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (context) => HomeScreen()));
-    } else {
+        context, 
+        MaterialPageRoute(builder: (context) => HomeScreen())
+      );
+    } catch (e) {
       setState(() {
-        _errorMessage = data["error"] ?? "Registration failed.";
+        if (e.toString().contains('409')) {
+          _errorMessage = "Username already taken. Choose a different one.";
+        } else {
+          _errorMessage = "Registration failed. Please try again.";
+        }
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
       });
     }
   }

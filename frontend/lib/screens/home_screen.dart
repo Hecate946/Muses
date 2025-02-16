@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/music_provider.dart';
 import '../components/music_card.dart';
 import '../services/api_service.dart';
+import 'search_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -24,28 +25,64 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final musicProvider = Provider.of<MusicProvider>(context);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Music Discovery"),
-      ),
-      body: PageView.builder(
-        scrollDirection: Axis.vertical, // ✅ Swipe up/down for new music
-        itemCount: musicProvider.queue.length,
-        onPageChanged: (index) {
-          print("✅ Page fully settled on index: $index");
-          musicProvider.stopAudio(); // ✅ Stop old track exactly when the new page is in place
-          Future.delayed(Duration(milliseconds: 50), () {
-            musicProvider.playTrack(index); // ✅ Play the new track slightly after stopping the old one
-          });
-        },
-        itemBuilder: (context, index) {
-          final track = musicProvider.queue[index];
-
-          return MusicCard(
-            musicData: track, // ✅ Uses structured queue data
-            apiService: apiService,
-          );
-        },
+    return SafeArea(
+      top: false,
+      child: Stack(
+        children: [
+          PageView.builder(
+            scrollDirection: Axis.vertical,
+            itemCount: musicProvider.queue.length,
+            onPageChanged: (index) {
+              print("✅ Page fully settled on index: $index");
+              musicProvider.stopAudio();
+              Future.delayed(Duration(milliseconds: 50), () {
+                musicProvider.playTrack(index);
+              });
+            },
+            itemBuilder: (context, index) {
+              final track = musicProvider.queue[index];
+              return MusicCard(
+                musicData: track,
+                apiService: apiService,
+              );
+            },
+          ),
+          Positioned(
+            top: 40,
+            left: 0,
+            right: 0,
+            child: AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              centerTitle: true,
+              title: Text(
+                "Music Discovery",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 32,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              actions: [
+                IconButton(
+                  icon: Icon(
+                    Icons.search,
+                    color: Colors.white,
+                    size: 32,
+                  ),
+                  padding: EdgeInsets.all(8),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => SearchScreen()),
+                    );
+                  },
+                ),
+                SizedBox(width: 8), // Add some padding on the right
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
