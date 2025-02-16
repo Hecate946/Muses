@@ -47,9 +47,6 @@ def get_user_history(user_id):
                 "audio_url": track.audio_url,
                 "thumbnail_url": track.thumbnail_url,
                 "video_url": track.video_url,
-                "view_count": track.view_count,
-                "like_count": track.like_count,
-                "duration": track.duration,
                 "timestamp": listen.start_time.strftime("%Y-%m-%d %H:%M:%S"),
             })
 

@@ -7,9 +7,6 @@ CREATE TABLE tracks (
     audio_url TEXT NOT NULL,  -- URL for the track's audio file
     thumbnail_url TEXT,  -- URL for the track's thumbnail
     video_url TEXT,  -- URL for the video
-    view_count INTEGER DEFAULT 0,  -- Number of views
-    like_count INTEGER DEFAULT 0,  -- Number of likes
-    duration INTEGER NOT NULL  -- Duration of the track in seconds
 );
 
 -- Users Table

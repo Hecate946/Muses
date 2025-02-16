@@ -102,9 +102,6 @@ def get_youtube_audio_batch():
             "audio_url": video_details.get("audio_url", ""),
             "thumbnail_url": video_details.get("thumbnail_url", ""),
             "video_url": video_details.get("video_url", ""),
-            "view_count": video_details.get("view_count", 0),
-            "like_count": video_details.get("like_count", 0),
-            "duration": video_details.get("duration", ""),
         })
 
     print(f"✅ Batch processing complete. Returning {len(results)} results.")
@@ -112,11 +109,19 @@ def get_youtube_audio_batch():
     return jsonify({"songs": results})
 
 
+import random
+
 def generate_new_batch(user_id):
     """✅ Generates a new batch of recommended tracks for the user."""
     sample_songs = [
         {"track_id": "b12345-6789", "track_name": "Imagine"},
         {"track_id": "c98765-4321", "track_name": "Bohemian Rhapsody"},
         {"track_id": "x11111-2222", "track_name": "Moonlight Sonata"},
+        {"track_id": "z22222-3333", "track_name": "Clair de Lune"},
+        {"track_id": "m54321-9999", "track_name": "Shape of You"},
+        {"track_id": "a88888-7777", "track_name": "Fur Elise"},
+        {"track_id": "t55555-6666", "track_name": "Nocturne Op.9 No.2"},
+        {"track_id": "g33333-4444", "track_name": "Hallelujah"},
     ]
-    return sample_songs[:5]  # ✅ Return up to 5 new tracks
+
+    return random.sample(sample_songs, k=min(5, len(sample_songs)))  # ✅ Return 5 random tracks

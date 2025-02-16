@@ -26,9 +26,6 @@ class Track(db.Model):
     audio_url = db.Column(db.String(255), nullable=False)
     thumbnail_url = db.Column(db.String(255))
     video_url = db.Column(db.String(255))
-    view_count = db.Column(db.Integer, default=0)
-    like_count = db.Column(db.Integer, default=0)
-    duration = db.Column(db.Integer, nullable=False)
     
     listens = db.relationship('Listen', backref='track', lazy=True)
     liked_by = db.relationship('Like', backref='track', lazy=True)

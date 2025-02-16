@@ -1,3 +1,4 @@
+from datetime import datetime
 from flask import Blueprint, request, jsonify
 from app import db
 from app.models import Track, User, Listen, Like, Save, LessonPlan
@@ -23,7 +24,13 @@ def add_user():
 @db_bp.route("/add_listen", methods=["POST"])
 def add_listen():
     data = request.json
-    listen = Listen(**data)
+
+    listen = Listen(
+        user_id=data["user_id"],
+        track_id=data["track_id"],
+        start_time=datetime.fromisoformat(data["start_time"].replace("Z", "")),  # Convert from string
+        end_time=datetime.fromisoformat(data["end_time"].replace("Z", "")) if data["end_time"] else None,  # Convert only if exists
+    )
     db.session.add(listen)
     db.session.commit()
     return jsonify({"message": "Listen recorded successfully"})
