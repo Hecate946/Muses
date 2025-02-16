@@ -21,7 +21,7 @@ class MusicCard extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            musicData["title"] ?? "Unknown Title",
+            musicData["track_name"] ?? "Unknown Title", // ✅ Changed from "title" to "track_name"
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
             textAlign: TextAlign.center,
           ),
@@ -35,7 +35,7 @@ class MusicCard extends StatelessWidget {
           IconButton(
             icon: Icon(Icons.favorite, color: Colors.red),
             onPressed: () {
-              apiService.likeTrack(1, musicData["id"]); // Ensure like function works
+              apiService.likeTrack(musicData["track_id"], musicData["track_name"]); // ✅ Pass both track_id & track_name
             },
           ),
         ],

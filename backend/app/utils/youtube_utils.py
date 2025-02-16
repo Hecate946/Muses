@@ -1,41 +1,46 @@
-import subprocess
+import yt_dlp
+import traceback
 import json
 
-def get_youtube_audio_data(query):
-    """Fetch YouTube audio URL, title, and uploader using yt-dlp with volume boost."""
+
+def fetch_audio_url(query):
+    """
+    Given a search query, use yt-dlp to find the best audio stream URL without downloading.
+    Returns a JSON object with {"audio_url": audio_url} or None if extraction fails.
+    """
+    if not query:
+        print("❌ No query provided.")
+        return json.dumps({"error": "No query provided."})
+
+    ytdlp_opts = {
+        'format': 'bestaudio',
+        'noplaylist': True,
+        'default_search': 'ytsearch',
+        'quiet': True,
+    }
+
     try:
-        # Step 1: Search for the first YouTube result
-        search_command = [
-            "yt-dlp",
-            "ytsearch1:" + query,  # Search and get the first result
-            "--print-json"
-        ]
-        search_result = subprocess.run(search_command, capture_output=True, text=True)
+        print(f"🔍 Searching YouTube for: {query}")
 
-        if search_result.returncode == 0:
-            video_info = json.loads(search_result.stdout)
-            video_url = f"https://www.youtube.com/watch?v={video_info['id']}"
+        with yt_dlp.YoutubeDL(ytdlp_opts) as ydl:
+            info = ydl.extract_info(query, download=False)
 
-            # Step 2: Extract the best audio format and boost volume using FFmpeg
-            audio_command = [
-                "yt-dlp",
-                "-j",  # Output JSON format
-                "--no-playlist",
-                "-f", "bestaudio",
-                "--postprocessor-args", "ffmpeg:-filter:a volume=2.5",  # 🔥 Boost volume (2.5x)
-                video_url
-            ]
-            audio_result = subprocess.run(audio_command, capture_output=True, text=True)
+        print("✅ yt-dlp successfully retrieved video information.")
 
-            if audio_result.returncode == 0:
-                audio_info = json.loads(audio_result.stdout)
-                return {
-                    "title": video_info.get("title"),
-                    "uploader": video_info.get("uploader"),
-                    "youtube_url": video_url,
-                    "audio_url": audio_info.get("url")  # 🔥 Audio URL with boosted volume
-                }
-        return None
+        if 'entries' in info:  # If a search returns multiple results, take the first one
+            print(f"🔎 Multiple results found. Selecting the first one: {info['entries'][0]['title']}")
+            info = info['entries'][0]
+
+        audio_url = info.get('url')
+
+        if not audio_url:
+            print("❌ Audio URL not found.")
+            return json.dumps({"error": "Audio URL not found."})
+
+        print(f"🎶 Extracted Audio URL: {audio_url}")
+        return audio_url  # Return JSON object
+
     except Exception as e:
-        print(f"Error fetching YouTube audio: {str(e)}")
-        return None
+        print(f"❌ Error extracting audio URL: {e}")
+        traceback.print_exc()
+        return json.dumps({"error": str(e)})  # Return JSON object on failure

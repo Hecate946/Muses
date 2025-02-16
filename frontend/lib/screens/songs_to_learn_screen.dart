@@ -45,10 +45,10 @@ class _SongsToLearnScreenState extends State<SongsToLearnScreen> with SingleTick
     try {
       // TODO: Replace with actual user ID from auth system
       final int userId = 1;
- 
-      final recommendedData = await _apiService.fetchRecommendedSongs(userId);
-      final savedData = await _apiService.fetchSavedSongs(userId);
- 
+      
+      final recommendedData = await _apiService.fetchRecommendedSongs();
+      final savedData = await _apiService.fetchSavedSongs();
+
       setState(() {
         recommendedSongs = recommendedData.map((data) {
           try {
