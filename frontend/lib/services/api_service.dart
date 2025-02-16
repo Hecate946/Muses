@@ -11,12 +11,162 @@ class ApiService {
 
   static String get baseUrl => 'http://$_baseHost:5000';
 
+  /// Login user and store authentication data
+  Future<Map<String, dynamic>> login(String username, String password) async {
+    final url = Uri.parse("$baseUrl/auth/login");
+    print("API Request: POST $url");
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({
+          "username": username,
+          "password": password,
+        }),
+      );
+
+      print("Response Code: ${response.statusCode}");
+      print("Response Body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        // Store user data in SharedPreferences
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setInt('user_id', data['user_id']);
+        await prefs.setString('username', username);
+        await prefs.setString('token', data['token'] ?? '');
+        return data;
+      } else {
+        final error = json.decode(response.body)['error'] ?? 'Login failed';
+        throw Exception(error);
+      }
+    } catch (e) {
+      print("Error during login: $e");
+      throw Exception("Login failed. Please try again.");
+    }
+  }
+
+  /// Register new user
+  Future<Map<String, dynamic>> register(String username, String password) async {
+    final url = Uri.parse("$baseUrl/auth/register");
+    print("API Request: POST $url");
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({
+          "username": username,
+          "password": password,
+        }),
+      );
+
+      print("Response Code: ${response.statusCode}");
+      print("Response Body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        // Store user data in SharedPreferences
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setInt('user_id', data['user_id']);
+        await prefs.setString('username', username);
+        await prefs.setString('token', data['token'] ?? '');
+        return data;
+      } else if (response.statusCode == 409) {
+        throw Exception("Username already taken");
+      } else {
+        final error = json.decode(response.body)['error'] ?? 'Registration failed';
+        throw Exception(error);
+      }
+    } catch (e) {
+      print("Error during registration: $e");
+      throw Exception(e.toString());
+    }
+  }
+
+  /// Logout user and clear stored data
+  Future<void> logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('user_id');
+    await prefs.remove('username');
+    await prefs.remove('token');
+  }
+
+  /// Check if user is logged in
+  Future<bool> isLoggedIn() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.containsKey('user_id') && prefs.containsKey('token');
+  }
+
+  /// Get stored user data
+  Future<Map<String, dynamic>> getStoredUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    return {
+      'user_id': prefs.getInt('user_id'),
+      'username': prefs.getString('username'),
+      'token': prefs.getString('token'),
+    };
+  }
+
+  /// Get authentication headers
+  Future<Map<String, String>> getAuthHeaders() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    return {
+      'Content-Type': 'application/json',
+      if (token != null) 'Authorization': 'Bearer $token',
+    };
+  }
+
   /// ✅ Get stored `user_id` from local storage
   Future<int?> getUserId() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getInt('user_id'); // Fetches user_id from storage
   }
+/// Track user interactions: scrolling
+  /// Fetch user profile data including metrics and activity
+  Future<Map<String, dynamic>> fetchUserProfile(int userId) async {
+    final url = Uri.parse("$baseUrl/users/$userId/profile");
+    print("API Request: GET $url");
 
+    try {
+      final response = await http.get(url);
+      print("Response Code: ${response.statusCode}");
+      print("Response Body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        throw Exception("Failed to fetch user profile");
+      }
+    } catch (e) {
+      print("Error fetching user profile: $e");
+      throw Exception("Failed to fetch user profile");
+    }
+  }
+
+  /// Fetch user's learning history
+  Future<List<Map<String, dynamic>>> fetchUserHistory(int userId) async {
+    final url = Uri.parse("$baseUrl/users/$userId/history");
+    print("API Request: GET $url");
+
+    try {
+      final response = await http.get(url);
+      print("Response Code: ${response.statusCode}");
+      print("Response Body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data.cast<Map<String, dynamic>>();
+      } else {
+        throw Exception("Failed to fetch user history");
+      }
+    } catch (e) {
+      print("Error fetching user history: $e");
+      throw Exception("Failed to fetch user history");
+    }
+  }
   /// ✅ Fetch the next 5 songs from the backend using track_id and track_name
   Future<List<Map<String, String>>> fetchNextBatch() async {
     final userId = await getUserId();
@@ -198,10 +348,5 @@ class ApiService {
     }
   }
 
-  /// ✅ Logout user (removes `user_id` from local storage)
-  Future<void> logout() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.remove("user_id");
-    print("✅ User logged out.");
-  }
+
 }
