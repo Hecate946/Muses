@@ -1,21 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/home_screen.dart';
 import 'screens/songs_to_learn_screen.dart';
 import 'screens/profile_screen.dart';
+import 'screens/login_screen.dart';  // ✅ Add login screen import
 import 'providers/music_provider.dart';
 import 'components/bottom_nav.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  bool isLoggedIn = prefs.containsKey("user_id");
+
   runApp(
     ChangeNotifierProvider(
       create: (context) => MusicProvider(),
-      child: MyApp(),
+      child: MyApp(isLoggedIn: isLoggedIn),
     ),
   );
 }
 
 class MyApp extends StatelessWidget {
+  final bool isLoggedIn;
+  MyApp({required this.isLoggedIn});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -24,7 +33,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: MainScreen(),
+      home: isLoggedIn ? MainScreen() : LoginScreen(),  // ✅ Redirect to login if not logged in
     );
   }
 }

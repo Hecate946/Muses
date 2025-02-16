@@ -34,10 +34,16 @@ def create_app():
     from app.routes.recommendations import recommendations_bp
     from app.routes.playback import playback_bp
     from app.routes.interactions import interactions_bp
+    from app.routes.auth import auth_bp  # ✅ Import auth routes
+    from app.routes.user_routes import user_bp  # Import the user routes
+    from app.routes.saved_songs import saved_songs_bp
 
     app.register_blueprint(search_bp, url_prefix="/search")
     app.register_blueprint(recommendations_bp, url_prefix="/recommendations")
     app.register_blueprint(playback_bp, url_prefix="/playback")
     app.register_blueprint(interactions_bp, url_prefix="/interactions")
+    app.register_blueprint(auth_bp, url_prefix="/auth")  # ✅ Register auth blueprint
+    app.register_blueprint(user_bp, url_prefix="/users")  # Register the user routes
+    app.register_blueprint(saved_songs_bp, url_prefix="/saved_songs")
 
     return app

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
-
+ 
+import '../services/api_service.dart';
+ 
 class Song {
   final String id;
   final String title;
@@ -8,7 +10,7 @@ class Song {
   final String difficulty;
   final String genre;
   final String duration;
-
+ 
   Song({
     required this.id,
     required this.title,
@@ -18,34 +20,34 @@ class Song {
     required this.duration,
   });
 }
-
+ 
 class SongsToLearnScreen extends StatefulWidget {
   @override
   _SongsToLearnScreenState createState() => _SongsToLearnScreenState();
 }
-
+ 
 class _SongsToLearnScreenState extends State<SongsToLearnScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   List<Song> recommendedSongs = [];
   List<Song> savedSongs = [];
   bool isLoading = true;
   final ApiService _apiService = ApiService();
-
+ 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _loadSongs();
   }
-
+ 
   Future<void> _loadSongs() async {
     setState(() => isLoading = true);
     try {
       // TODO: Replace with actual user ID from auth system
       final int userId = 1;
       
-      final recommendedData = await _apiService.fetchRecommendedSongs(userId);
-      final savedData = await _apiService.fetchSavedSongs(userId);
+      final recommendedData = await _apiService.fetchRecommendedSongs();
+      final savedData = await _apiService.fetchSavedSongs();
 
       setState(() {
         recommendedSongs = recommendedData.map((data) {
@@ -64,7 +66,7 @@ class _SongsToLearnScreenState extends State<SongsToLearnScreen> with SingleTick
             return null;
           }
         }).whereType<Song>().toList();
-
+ 
         savedSongs = savedData.map((data) {
           try {
             return Song(
@@ -90,13 +92,13 @@ class _SongsToLearnScreenState extends State<SongsToLearnScreen> with SingleTick
       setState(() => isLoading = false);
     }
   }
-
+ 
   @override
   void dispose() {
     _tabController.dispose();
     super.dispose();
   }
-
+ 
   void _showSongDetails(Song song) {
     showDialog(
       context: context,
@@ -131,14 +133,14 @@ class _SongsToLearnScreenState extends State<SongsToLearnScreen> with SingleTick
       ),
     );
   }
-
+ 
   Widget _buildSongList(List<Song> songs) {
     if (isLoading) {
       return Center(
         child: CircularProgressIndicator(),
       );
     }
-    
+ 
     if (songs.isEmpty) {
       return Center(
         child: Column(
@@ -160,21 +162,25 @@ class _SongsToLearnScreenState extends State<SongsToLearnScreen> with SingleTick
         ),
       );
     }
-
+ 
     return ListView.builder(
+      shrinkWrap: true,
+      physics: AlwaysScrollableScrollPhysics(),
       itemCount: songs.length,
       itemBuilder: (context, index) {
         final song = songs[index];
         return ListTile(
-          title: Text(song.title),
-          subtitle: Text(song.artist),
+          title: Text(song.title,
+              overflow: TextOverflow.ellipsis),
+          subtitle: Text(song.artist,
+              overflow: TextOverflow.ellipsis),
           trailing: Text(song.difficulty),
           onTap: () => _showSongDetails(song),
         );
       },
     );
   }
-
+ 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -188,12 +194,20 @@ class _SongsToLearnScreenState extends State<SongsToLearnScreen> with SingleTick
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildSongList(recommendedSongs),
-          _buildSongList(savedSongs),
-        ],
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildSongList(recommendedSongs),
+                  _buildSongList(savedSongs),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
