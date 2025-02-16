@@ -52,14 +52,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Profile'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.settings),
-            onPressed: () {
-              // TODO: Implement settings
-            },
-          ),
-        ],
       ),
       body: SafeArea(
         child: _isLoading
@@ -132,6 +124,78 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 SizedBox(height: 12),
                 _buildActivityList(),
+                SizedBox(height: 24),
+                // Logout Button
+                Container(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      // TODO: Implement logout functionality
+                    },
+                    icon: Icon(Icons.logout, color: Colors.red[700]),
+                    label: Text(
+                      'Logout',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.red[700],
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red[50],
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 12),
+                // Delete Account Button
+                Container(
+                  width: double.infinity,
+                  child: TextButton.icon(
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: Text('Delete Account'),
+                            content: Text(
+                              'Are you sure you want to delete your account? This action cannot be undone.',
+                              style: TextStyle(fontSize: 16),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: Text('Cancel'),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  // TODO: Implement account deletion
+                                  Navigator.pop(context);
+                                },
+                                child: Text(
+                                  'Delete',
+                                  style: TextStyle(color: Colors.red),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                    icon: Icon(Icons.delete_forever, color: Colors.grey[700]),
+                    label: Text(
+                      'Delete Account',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 24),
               ],
             ),
           ),
