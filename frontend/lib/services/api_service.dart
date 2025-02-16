@@ -8,7 +8,7 @@ class ApiService {
     return Platform.isAndroid ? '10.0.2.2' : 'localhost';
   }
 
-  static String get baseUrl => 'http://$_baseHost:5000/interactions';
+  static String get baseUrl => 'http://$_baseHost:5000/';
 
   /// Fetch a list of music tracks based on instrumentation
   Future<List<dynamic>> fetchMusicByInstrument(String instrument) async {

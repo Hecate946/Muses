@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-
+ 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
-
+ 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
-
+ 
 class _ProfileScreenState extends State<ProfileScreen> {
   // Sample data for demonstration
   final List<Map<String, String>> _likedSongs = [
@@ -15,194 +15,190 @@ class _ProfileScreenState extends State<ProfileScreen> {
     {'title': 'Song 3', 'genre': 'Genre'},
     {'title': 'Song 4', 'genre': 'Genre'},
   ];
-
+ 
   final List<String> _instruments = ['Instrument 1', 'Instrument 2', 'Instrument 3'];
-
+ 
   final List<Map<String, String>> _yourSongs = [
     {'title': 'Song 1', 'genre': 'Genre'},
     {'title': 'Song 2', 'genre': 'Genre'},
     {'title': 'Song 3', 'genre': 'Genre'},
   ];
-
+ 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Your Profile'),
-        backgroundColor: Colors.deepPurple.shade200,
-        elevation: 0,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Profile Header
-            Center(
-              child: Column(
-                children: [
-                  CircleAvatar(
-                    radius: 50,
-                    backgroundColor: Colors.deepPurple.shade100,
-                    child: Icon(Icons.person, size: 50, color: Colors.deepPurple.shade700),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Username',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 24),
-                ],
-              ),
-            ),
-
-            /// YOUR LIKES SECTION
-            const Text(
-              'Your Likes',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: _likedSongs
-                    .map(
-                      (songData) => Padding(
-                        padding: const EdgeInsets.only(right: 8.0),
-                        child: _buildSongSquare(
-                          songData['title']!,
-                          songData['genre']!,
-                          color: Colors.purple.shade100,
-                        ),
-                      ),
-                    )
-                    .toList(),
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            /// YOUR INSTRUMENTS SECTION
-            const Text(
-              'Your Instruments',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: _instruments
-                    .map(
-                      (instrument) => Padding(
-                        padding: const EdgeInsets.only(right: 8.0),
-                        child: _buildInstrumentSquare(
-                          instrument,
-                          color: Colors.purple.shade50,
-                        ),
-                      ),
-                    )
-                    .toList(),
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            /// YOUR SONGS SECTION
-            const Text(
-              'Your Songs',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: _yourSongs
-                    .map(
-                      (songData) => Padding(
-                        padding: const EdgeInsets.only(right: 8.0),
-                        child: _buildSongRectangle(
-                          songData['title']!,
-                          songData['genre']!,
-                          color: Colors.purple.shade100,
-                        ),
-                      ),
-                    )
-                    .toList(),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Helper widget to build a square-like card for a song
-  Widget _buildSongSquare(String title, String genre, {Color? color}) {
-    return Container(
-      width: 70,
-      height: 70,
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: color ?? Colors.grey.shade200,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-            Text(genre, style: const TextStyle(fontSize: 12)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Helper widget to build a square-like card for an instrument
-  Widget _buildInstrumentSquare(String instrument, {Color? color}) {
-    return Container(
-      width: 80,
-      height: 80,
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: color ?? Colors.grey.shade200,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Center(
-        child: Text(
-          instrument,
-          textAlign: TextAlign.center,
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
-      ),
-    );
-  }
-
-  /// Helper widget to build a rectangular card for "Your Songs"
-  Widget _buildSongRectangle(String title, String genre, {Color? color}) {
-    return Container(
-      width: 80,
-      height: 100,
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: color ?? Colors.grey.shade200,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 4),
-          Text(genre, style: const TextStyle(fontSize: 12)),
+        title: Text('Profile'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.settings),
+            onPressed: () {
+              // TODO: Implement settings
+            },
+          ),
         ],
       ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Profile Header
+                Center(
+                  child: Column(
+                    children: [
+                      CircleAvatar(
+                        radius: 40,
+                        backgroundColor: Colors.grey[200],
+                        child: Icon(Icons.person, size: 40, color: Colors.grey[500]),
+                      ),
+                      SizedBox(height: 12),
+                      Text(
+                        'John Doe',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Joined January 2024',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Colors.grey[600],
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 20),
+ 
+                // Statistics Grid
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    return GridView.count(
+                      crossAxisCount: 2,
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      mainAxisSpacing: 12,
+                      crossAxisSpacing: 12,
+                      childAspectRatio: constraints.maxWidth > 400 ? 1.8 : 1.5,
+                      children: [
+                        _buildStatCard(
+                          context,
+                          'Songs Learned',
+                          '12',
+                          Icons.music_note,
+                        ),
+                        _buildStatCard(
+                          context,
+                          'Practice Hours',
+                          '24',
+                          Icons.timer,
+                        ),
+                        _buildStatCard(
+                          context,
+                          'Achievements',
+                          '5',
+                          Icons.star,
+                        ),
+                        _buildStatCard(
+                          context,
+                          'Instruments',
+                          '2',
+                          Icons.piano,
+                        ),
+                      ],
+                    );
+                  },
+                ),
+                SizedBox(height: 20),
+ 
+                // Recent Activity
+                Text(
+                  'Recent Activity',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                SizedBox(height: 12),
+                _buildActivityList(),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+ 
+  Widget _buildStatCard(BuildContext context, String title, String value, IconData icon) {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 12.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 20, color: Theme.of(context).primaryColor),
+            SizedBox(height: 6),
+            Text(
+              value,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: Theme.of(context).primaryColor,
+                  ),
+            ),
+            SizedBox(height: 2),
+            Text(
+              title,
+              style: Theme.of(context).textTheme.bodySmall,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+ 
+  Widget _buildActivityList() {
+    return Card(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildActivityItem(
+            'Started learning Moonlight Sonata',
+            '2 hours ago',
+            Icons.music_note,
+          ),
+          Divider(height: 1),
+          _buildActivityItem(
+            'Completed daily practice goal',
+            '1 day ago',
+            Icons.check_circle,
+          ),
+          Divider(height: 1),
+          _buildActivityItem(
+            'Added new instrument: Piano',
+            '3 days ago',
+            Icons.piano,
+          ),
+        ],
+      ),
+    );
+  }
+ 
+  Widget _buildActivityItem(String title, String time, IconData icon) {
+    return ListTile(
+      leading: Icon(icon, size: 20),
+      title: Text(
+        title,
+        style: TextStyle(fontSize: 14),
+        overflow: TextOverflow.ellipsis,
+      ),
+      subtitle: Text(
+        time,
+        style: TextStyle(fontSize: 12),
+      ),
+      dense: true,
+      visualDensity: VisualDensity.compact,
     );
   }
 }

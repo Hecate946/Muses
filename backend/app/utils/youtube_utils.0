@@ -1,0 +1,77 @@
+import subprocess
+import json
+import tempfile
+import os
+from flask import Flask, request, Response
+
+app = Flask(__name__)
+
+def get_audio_url(query):
+    """
+    Search YouTube for the best match, extract the best audio URL using yt-dlp,
+    boost the volume using ffmpeg (optional), and return a JSON response with the info.
+    """
+    try:
+        print(f"🔍 Searching YouTube for: {query}")
+
+        # Step 1: Search YouTube for the track
+        search_command = [
+            "yt-dlp",
+            "ytsearch1:" + query,
+            "--print-json"
+        ]
+        search_result = subprocess.run(search_command, capture_output=True, text=True)
+
+        if search_result.returncode != 0 or not search_result.stdout.strip():
+            error_msg = f"❌ yt-dlp search error: {search_result.stderr}"
+            print(error_msg)
+            return Response(json.dumps({"error": error_msg}), status=500, mimetype="application/json")
+
+        video_info = json.loads(search_result.stdout)
+
+        video_id = video_info.get("id")
+        if not video_id:
+            error_msg = "❌ No valid video found."
+            print(error_msg)
+            return Response(json.dumps({"error": error_msg}), status=404, mimetype="application/json")
+
+        video_url = f"https://www.youtube.com/watch?v={video_id}"
+        title = video_info.get("title", "Unknown Title")
+        uploader = video_info.get("uploader", "Unknown Uploader")
+
+        print(f"🎬 Found Video: {title} by {uploader} ({video_url})")
+
+        # Step 2: Extract the best audio stream URL
+        audio_command = [
+            "yt-dlp",
+            "-j",
+            "--no-playlist",
+            "-f", "bestaudio",
+            video_url
+        ]
+        audio_result = subprocess.run(audio_command, capture_output=True, text=True)
+
+        if audio_result.returncode != 0 or not audio_result.stdout.strip():
+            error_msg = f"❌ yt-dlp audio extraction error: {audio_result.stderr}"
+            print(error_msg)
+            return Response(json.dumps({"error": error_msg}), status=500, mimetype="application/json")
+
+        audio_info = json.loads(audio_result.stdout)
+        audio_url = audio_info.get("url")
+
+        print(f"🎶 Extracted Audio URL: {audio_url}")
+
+            # Return JSON response with the boosted audio
+        response_data = {
+            "title": title,
+            "uploader": uploader,
+            "video_url": video_url,
+            "audio_url": audio_url,  # Original stream URL
+        }
+
+        return Response(json.dumps(response_data), mimetype="application/json")
+
+    except Exception as e:
+        error_msg = f"❌ Error: {str(e)}"
+        print(error_msg)
+        return Response(json.dumps({"error": error_msg}), status=500, mimetype="application/json")
