@@ -1,6 +1,9 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
-import '../services/api_service.dart';
-import 'home_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'screen_manager.dart';
 import 'login_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -14,8 +17,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
   String? _errorMessage;
   bool _isLoading = false;
 
-  /// ✅ Handles user registration
-  final ApiService _apiService = ApiService();
 
   Future<void> _registerUser() async {
     if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
@@ -31,13 +32,35 @@ class _SignUpScreenState extends State<SignUpScreen> {
     });
 
     try {
-      await _apiService.registerUser(_usernameController.text, _passwordController.text);
-      
-      // If registration successful, navigate to home
-      Navigator.pushReplacement(
-        context, 
-        MaterialPageRoute(builder: (context) => HomeScreen())
+      // Register user and get response
+      final response = await http.post(
+        Uri.parse('http://${Platform.isAndroid ? '10.0.2.2' : 'localhost'}:5000/auth/register'),
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({
+          "username": _usernameController.text,
+          "password": _passwordController.text,
+        }),
       );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final userId = data['user_id'];
+
+        // Save user_id to SharedPreferences
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setInt('user_id', userId);
+        
+        // Clear the navigation stack and set ScreenManager as the root
+        if (mounted) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => ScreenManager()),
+            (Route<dynamic> route) => false,
+          );
+        }
+      } else {
+        final error = json.decode(response.body)['error'];
+        throw Exception(error ?? 'Registration failed');
+      }
     } catch (e) {
       setState(() {
         if (e.toString().contains('409')) {

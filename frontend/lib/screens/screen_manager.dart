@@ -36,12 +36,21 @@ class _ScreenManagerState extends State<ScreenManager> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      body: _screens[_currentIndex],
-      bottomNavigationBar: BottomNav(
-        currentIndex: _currentIndex,
-        onTap: _onTabTapped,
+    return WillPopScope(
+      onWillPop: () async {
+        // Prevent back navigation from closing the app
+        return false;
+      },
+      child: Scaffold(
+        extendBodyBehindAppBar: true,
+        body: IndexedStack(
+          index: _currentIndex,
+          children: _screens,
+        ),
+        bottomNavigationBar: BottomNav(
+          currentIndex: _currentIndex,
+          onTap: _onTabTapped,
+        ),
       ),
     );
   }
