@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from app.services.recommendation_service import get_user_recommendations
+# from app.services.recommendation_service import get_user_recommendations
 
 recommendations_bp = Blueprint("recommendations", __name__)
 
@@ -14,5 +14,5 @@ def get_recommendations():
     if not user_id:
         return jsonify({"error": "Missing user_id"}), 400
 
-    return get_user_recommendations(user_id, instrumentation, genre, composer, top_n=5)
+    # return get_user_recommendations(user_id, instrumentation, genre, composer, top_n=5)
 

@@ -1,7 +1,6 @@
 from flask import Blueprint, request, jsonify
 from app.utils.youtube_utils import fetch_video_details
 from app import db
-from app.models import Interaction
 from cachetools import LRUCache
 
 playback_bp = Blueprint("playback", __name__)
@@ -40,11 +39,6 @@ def get_youtube_audio():
 
         user_cache[cache_key] = track_data  # ✅ Store in cache
         print(f"⚡ User {user_id} Cached: {cache_key}")
-
-    # ✅ Log interaction
-    new_interaction = Interaction(user_id=user_id, track_id=track_id, action="play")
-    db.session.add(new_interaction)
-    db.session.commit()
 
     return jsonify(track_data)
 
@@ -113,12 +107,6 @@ def get_youtube_audio_batch():
             "duration": video_details.get("duration", ""),
         })
 
-        # ✅ Log interaction
-        print(f"📝 Logging interaction for track {track_id} (user {user_id}).")
-        new_interaction = Interaction(user_id=user_id, track_id=track_id, action="prefetch")
-        db.session.add(new_interaction)
-
-    db.session.commit()
     print(f"✅ Batch processing complete. Returning {len(results)} results.")
 
     return jsonify({"songs": results})
