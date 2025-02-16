@@ -36,6 +36,9 @@ dependencies:
   # State management
   provider: ^6.0.5
 
+  # Audio player
+  audioplayers: ^6.1.2
+
   # WebView for YouTube playback
   # flutter_webview_plugin: ^0.4.0
 
