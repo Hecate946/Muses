@@ -16,6 +16,31 @@ class _MusicCardState extends State<MusicCard> with SingleTickerProviderStateMix
   bool isFavorite = false;
   bool isSaved = false;
 
+  @override
+  void initState() {
+    super.initState();
+    _checkTrackStatus();
+  }
+
+  Future<void> _checkTrackStatus() async {
+    final trackId = widget.musicData["track_id"];
+    if (trackId != null) {
+      try {
+        final isLiked = await widget.apiService.isTrackLiked(trackId);
+        final isSavedTrack = await widget.apiService.isTrackSaved(trackId);
+        
+        if (mounted) {
+          setState(() {
+            isFavorite = isLiked;
+            isSaved = isSavedTrack;
+          });
+        }
+      } catch (e) {
+        print("Error checking track status: $e");
+      }
+    }
+  }
+
   void _launchURL(String url) async {
     try {
       if (await canLaunch(url)) {
@@ -100,12 +125,22 @@ class _MusicCardState extends State<MusicCard> with SingleTickerProviderStateMix
                     color: isFavorite ? Colors.red : Colors.black54,
                     size: 32,
                   ),
-                  onPressed: () {
-                    setState(() {
-                      isFavorite = !isFavorite;
-                    });
-                    if (isFavorite) {
-                      widget.apiService.likeTrack(widget.musicData["track_id"], widget.musicData["track_name"]);
+                  onPressed: () async {
+                    try {
+                      if (!isFavorite) {
+                        await widget.apiService.likeTrack(widget.musicData["track_id"], widget.musicData["track_name"]);
+                      } else {
+                        await widget.apiService.unlikeTrack(widget.musicData["track_id"]);
+                      }
+                      setState(() {
+                        isFavorite = !isFavorite;
+                      });
+                    } catch (e) {
+                      print("Error toggling like status: $e");
+                      // Show error to user
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Failed to update like status')),
+                      );
                     }
                   },
                 ),

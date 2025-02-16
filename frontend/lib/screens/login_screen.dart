@@ -26,8 +26,11 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _checkLoginStatus() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     if (prefs.containsKey("user_id")) {
-      Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (context) => ScreenManager()));
+      // Clear the navigation stack and set ScreenManager as the root
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => ScreenManager()),
+        (Route<dynamic> route) => false,
+      );
     }
   }
 
@@ -56,8 +59,11 @@ class _LoginScreenState extends State<LoginScreen> {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setInt("user_id", data["user_id"]); // ✅ Save login state
 
-      Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (context) => ScreenManager()));
+      // Clear the navigation stack and set ScreenManager as the root
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => ScreenManager()),
+        (Route<dynamic> route) => false,
+      );
     } else {
       setState(() {
         _errorMessage = "Invalid username or password";

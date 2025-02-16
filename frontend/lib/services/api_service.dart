@@ -155,6 +155,70 @@ Future<List<Map<String, String>>> fetchNextBatch() async {
     }
   }
 
+  /// Remove like from a track
+  Future<void> unlikeTrack(String trackId) async {
+    final userId = await getUserId();
+    if (userId == null) {
+      print("❌ No user_id found. Can't unlike track.");
+      return;
+    }
+
+    final url = Uri.parse("$baseUrl/interactions/unlike");
+    final body = json.encode({"user_id": userId, "track_id": trackId});
+
+    print("API Request: POST $url");
+    print("Request Body: $body");
+
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: body
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception("Failed to unlike track");
+    }
+  }
+
+  /// Check if a track is liked by the user
+  Future<bool> isTrackLiked(String trackId) async {
+    final userId = await getUserId();
+    if (userId == null) return false;
+
+    final url = Uri.parse("$baseUrl/interactions/like/status?user_id=$userId&track_id=$trackId");
+    try {
+      print("API Request: GET $url");
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return data['is_liked'] ?? false;
+      }
+      return false;
+    } catch (e) {
+      print("❌ Error checking if track is liked: $e");
+      return false;
+    }
+  }
+
+  /// Check if a track is saved by the user
+  Future<bool> isTrackSaved(String trackId) async {
+    final userId = await getUserId();
+    if (userId == null) return false;
+
+    final url = Uri.parse("$baseUrl/users/$userId/saved/$trackId/status");
+    try {
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return data['is_saved'] ?? false;
+      }
+      return false;
+    } catch (e) {
+      print("❌ Error checking if track is saved: $e");
+      return false;
+    }
+  }
+
   /// ✅ Track user interactions: scrolling
   Future<void> trackScroll(String trackId, String trackName, String startTime, String endTime) async {
     final userId = await getUserId();
