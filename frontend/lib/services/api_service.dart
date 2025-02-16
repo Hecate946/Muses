@@ -43,6 +43,42 @@ class ApiService {
     }
   }
 
+  /// Fetch recommended songs for a user
+  Future<List<dynamic>> fetchRecommendedSongs(int userId) async {
+    final url = Uri.parse("http://$_baseHost:5000/recommendations?user_id=$userId");
+    print("API Request: GET $url");
+
+    final response = await http.get(url);
+    print("Response Code: ${response.statusCode}");
+    print("Response Body: ${response.body}");
+
+    if (response.statusCode == 200) {
+      final decodedData = json.decode(response.body);
+      print("Decoded Data: $decodedData");
+      return decodedData is List ? decodedData : [];
+    } else {
+      throw Exception("Failed to fetch recommended songs: ${response.statusCode}");
+    }
+  }
+
+  /// Fetch saved/liked songs for a user
+  Future<List<dynamic>> fetchSavedSongs(int userId) async {
+    final url = Uri.parse("http://$_baseHost:5000/saved-songs?user_id=$userId");
+    print("API Request: GET $url");
+
+    final response = await http.get(url);
+    print("Response Code: ${response.statusCode}");
+    print("Response Body: ${response.body}");
+
+    if (response.statusCode == 200) {
+      final decodedData = json.decode(response.body);
+      print("Decoded Data: $decodedData");
+      return decodedData is List ? decodedData : [];
+    } else {
+      throw Exception("Failed to fetch saved songs: ${response.statusCode}");
+    }
+  }
+
   /// Track user interactions: likes
   Future<void> likeTrack(int userId, String trackId) async {
     final url = Uri.parse("$baseUrl/interactions/like");
