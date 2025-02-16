@@ -47,10 +47,7 @@ class _SongsToLearnScreenState extends State<SongsToLearnScreen> with SingleTick
   Future<void> _loadSongs() async {
     setState(() => isLoading = true);
     try {
-      
-      final recommendedData = await _apiService.fetchRecommendedSongs();
-      final savedData = await _apiService.fetchSavedSongs();
-
+      // Add two specific songs for learning
       setState(() {
         recommendedSongs = [
           Song(

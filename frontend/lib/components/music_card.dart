@@ -62,7 +62,7 @@ class _MusicCardState extends State<MusicCard> with SingleTickerProviderStateMix
     return Container(
       height: MediaQuery.of(context).size.height,
       decoration: BoxDecoration(
-        color: Color(0xFFFFF5E1), // Warm cream background
+        color: Color(0xFFFFFFFF), // Warm cream background
       ),
       child: Column(
         children: [
