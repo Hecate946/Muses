@@ -34,9 +34,10 @@ class _HomeScreenState extends State<HomeScreen> {
             itemCount: musicProvider.queue.length,
             onPageChanged: (index) {
               print("✅ Page fully settled on index: $index");
-              musicProvider.stopAudio();
-              Future.delayed(Duration(milliseconds: 50), () {
-                musicProvider.playTrack(index);
+              musicProvider.stopAudio().then((_) {
+                Future.delayed(Duration(milliseconds: 50)).then((_) {
+                  musicProvider.playTrack(index);
+                });
               });
 
               if (index >= musicProvider.queue.length - 2) {

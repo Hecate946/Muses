@@ -17,14 +17,28 @@ class _MusicCardState extends State<MusicCard> with SingleTickerProviderStateMix
   bool isSaved = false;
 
   void _launchURL(String url) async {
+    print('Attempting to launch URL: "$url"');
+    
+    if (url.isEmpty) {
+      print('Error: Empty URL');
+      return;
+    }
+
+    // Ensure URL starts with http:// or https://
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      url = 'https://$url';
+    }
+
     try {
-      if (await canLaunch(url)) {
-        await launch(url);
-      } else {
-        print("Could not launch $url");
+      final Uri uri = Uri.parse(url);
+      print('Parsed URI: $uri');
+      
+      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+        print('Could not launch $url');
       }
     } catch (e) {
-      print("Error launching URL: $e");
+      print('Error launching URL: $e');
+      print('Stack trace: ${StackTrace.current}');
     }
   }
 
@@ -32,6 +46,7 @@ class _MusicCardState extends State<MusicCard> with SingleTickerProviderStateMix
   Widget build(BuildContext context) {
     String thumbnailUrl = widget.musicData["thumbnail_url"] ?? "";
     String videoUrl = widget.musicData["video_url"] ?? "";
+    print('Video URL from musicData: "$videoUrl"');
     String trackName = widget.musicData["track_name"] ?? "Unknown Title";
 
     return Container(
@@ -53,6 +68,7 @@ class _MusicCardState extends State<MusicCard> with SingleTickerProviderStateMix
                 width: MediaQuery.of(context).size.width * 0.85,
                 height: MediaQuery.of(context).size.height * 0.22, // Adjusted height
                 decoration: BoxDecoration(
+                  color: Colors.grey[200],
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black38,
@@ -60,12 +76,12 @@ class _MusicCardState extends State<MusicCard> with SingleTickerProviderStateMix
                       offset: Offset(0, 4),
                     ),
                   ],
-                  image: DecorationImage(
-                    image: thumbnailUrl.isNotEmpty
-                        ? NetworkImage(thumbnailUrl) as ImageProvider
-                        : AssetImage("assets/music_bg.jpg"),
-                    fit: BoxFit.cover,
-                  ),
+                  image: thumbnailUrl.isNotEmpty
+                      ? DecorationImage(
+                          image: NetworkImage(thumbnailUrl),
+                          fit: BoxFit.cover,
+                        )
+                      : null,
                 ),
               ),
             ),

@@ -59,6 +59,7 @@ class MusicProvider extends ChangeNotifier {
               "track_name": track["track_name"] ?? "",
               "audio_url": track["audio_url"] ?? "",
               "video_id": track["video_id"] ?? "",
+              "video_url": track["video_url"] ?? "",  // Add video_url mapping
               "thumbnail_url": track["thumbnail_url"] ?? "",
             }));
         print("✅ Prefetched next batch (${newTracks.length} songs)");
@@ -102,9 +103,15 @@ class MusicProvider extends ChangeNotifier {
       _currentAudioUrl = audioUrl;
       print("🎵 Now playing: $_currentAudioUrl");
 
-      await _audioPlayer.setSourceUrl(_currentAudioUrl!);
-      await _audioPlayer.setVolume(1.0);
-      _audioPlayer.resume();
+      try {
+        await _audioPlayer.setReleaseMode(ReleaseMode.stop);  // Ensure clean release
+        await _audioPlayer.setSourceUrl(_currentAudioUrl!);  // Set audio source
+        await _audioPlayer.setVolume(1.0);
+        await _audioPlayer.resume();
+        print("✅ Audio playback started successfully");
+      } catch (e) {
+        print("❌ Error setting audio source: $e");
+      }
     } else {
       print("❌ Failed to get audio URL for: ${_queue[index]["track_name"]}");
     }
@@ -118,8 +125,8 @@ class MusicProvider extends ChangeNotifier {
   }
 
   /// ✅ Stops the audio instantly when a new page settles
-  void stopAudio() {
-    _audioPlayer.stop();
+  Future<void> stopAudio() async {
+    await _audioPlayer.stop();
     notifyListeners();
   }
 }

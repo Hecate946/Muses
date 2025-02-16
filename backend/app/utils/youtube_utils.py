@@ -13,10 +13,18 @@ def fetch_video_details(query):
         return json.dumps({"error": "No query provided."})
 
     ytdlp_opts = {
-        "format": "bestaudio",
+        # Force M4A/MP4 audio for iOS compatibility
+        "format": "140/bestaudio[ext=m4a]/bestaudio[ext=mp4]/bestaudio",
         "noplaylist": True,
         "default_search": "ytsearch",
         "quiet": True,
+        "prefer_free_formats": True,
+        # Extract audio in a format compatible with iOS
+        "postprocessors": [{
+            "key": "FFmpegExtractAudio",
+            "preferredcodec": "m4a",
+            "preferredquality": "192",
+        }],
     }
 
     try:
