@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from app import db
-from app.models import User, Interaction
+from app.models import User
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -65,8 +65,6 @@ def delete_account():
     if not user:
         return jsonify({"error": "User not found"}), 404
 
-    # ✅ Delete interactions first (to avoid foreign key issues)
-    Interaction.query.filter_by(user_id=user_id).delete()
     db.session.delete(user)
     db.session.commit()
 

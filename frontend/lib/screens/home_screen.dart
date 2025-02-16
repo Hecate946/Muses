@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/music_provider.dart';
 import '../components/music_card.dart';
+import '../services/db_service.dart';
 import '../services/api_service.dart';
 import 'search_screen.dart';
 
@@ -11,6 +12,10 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  int userId = 1; // Replace with actual user ID from authentication
+  String? currentTrackId;
+  DateTime? startTime;
+
   final ApiService apiService = ApiService();
 
   @override
@@ -19,6 +24,56 @@ class _HomeScreenState extends State<HomeScreen> {
     Future.delayed(Duration.zero, () {
       Provider.of<MusicProvider>(context, listen: false).initializeQueue();
     });
+  }
+
+  Future<void> _storeTrackData(Map<String, String> track) async {
+    try {
+      await DbService.addTrack(track);
+    } catch (e) {
+      print("Error storing track data: $e");
+    }
+  }
+
+  Future<void> _logScrollInteraction(Map<String, String> track) async {
+    DateTime endTime = DateTime.now().toUtc();
+
+    if (currentTrackId != null && startTime != null) {
+      await DbService.addListen({
+        "user_id": userId.toString(),
+        "track_id": currentTrackId!,
+        "start_time": startTime!.toIso8601String(),
+        "end_time": endTime.toIso8601String(),
+      });
+    }
+
+    currentTrackId = track["track_id"];
+    startTime = DateTime.now().toUtc();
+
+    await _storeTrackData(track);
+  }
+
+  Future<void> _logLike(Map<String, String> track) async {
+    try {
+      await DbService.addLike({
+        "user_id": userId.toString(),
+        "track_id": track["track_id"] ?? '',
+        "timestamp": DateTime.now().toUtc().toIso8601String(),
+      });
+    } catch (e) {
+      print("Error recording like: $e");
+    }
+  }
+
+  Future<void> _logSave(Map<String, String> track) async {
+    try {
+      await DbService.addSave({
+        "user_id": userId.toString(),
+        "track_id": track["track_id"]!,
+        "timestamp": DateTime.now().toUtc().toIso8601String(),
+      });
+    } catch (e) {
+      print("Error recording save: $e");
+    }
   }
 
   @override
@@ -32,12 +87,22 @@ class _HomeScreenState extends State<HomeScreen> {
           PageView.builder(
             scrollDirection: Axis.vertical,
             itemCount: musicProvider.queue.length,
-            onPageChanged: (index) {
+            onPageChanged: (index) async {
               print("✅ Page fully settled on index: $index");
               musicProvider.stopAudio();
               Future.delayed(Duration(milliseconds: 50), () {
                 musicProvider.playTrack(index);
               });
+
+              if (index >= musicProvider.queue.length - 2) {
+                musicProvider.fetchNextBatch();
+              }
+
+              final track = musicProvider.queue[index];
+
+              print("TRACK: $track");
+
+              await _logScrollInteraction(track);
             },
             itemBuilder: (context, index) {
               final track = musicProvider.queue[index];
@@ -48,7 +113,7 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
           Positioned(
-            top: 40,
+            top: 0,
             left: 0,
             right: 0,
             child: AppBar(
@@ -58,8 +123,8 @@ class _HomeScreenState extends State<HomeScreen> {
               title: Text(
                 "Music Discovery",
                 style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 32,
+                  color: Colors.black87,
+                  fontSize: 24,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -67,7 +132,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 IconButton(
                   icon: Icon(
                     Icons.search,
-                    color: Colors.white,
+                    color: Colors.black87,
                     size: 32,
                   ),
                   padding: EdgeInsets.all(8),
@@ -78,7 +143,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     );
                   },
                 ),
-                SizedBox(width: 8), // Add some padding on the right
+                SizedBox(width: 12),
               ],
             ),
           ),
