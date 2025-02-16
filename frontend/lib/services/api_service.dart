@@ -1,11 +1,17 @@
 import 'dart:convert';
+import 'dart:io' show Platform;
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  static const String baseUrl = "http://10.0.2.2:5000/interactions";
+  static String get _baseHost {
+    // Use 10.0.2.2 for Android emulator and localhost for iOS simulator
+    return Platform.isAndroid ? '10.0.2.2' : 'localhost';
+  }
+
+  static String get baseUrl => 'http://$_baseHost:5000/interactions';
 
   Future<List<dynamic>> fetchMusicByInstrument(String instrument) async {
-    final url = Uri.parse("http://10.0.2.2:5000/search/musicbrainz?instrument=$instrument");
+    final url = Uri.parse("http://$_baseHost:5000/search/musicbrainz?instrument=$instrument");
     print("API Request: GET $url");  // Debugging print
 
     final response = await http.get(url);
