@@ -37,27 +37,15 @@ def fetch_video_details(query):
         video_url = info.get("webpage_url")
         yt_track_id = info.get("id")
         yt_track_name = info.get("title")
-        view_count = info.get("view_count", 0)
-        like_count = info.get("like_count", 0)
-        duration = info.get("duration", 0)  # In seconds
 
         if not audio_url:
             print("❌ Audio URL not found.")
             return json.dumps({"error": "Audio URL not found."})
 
-        # ✅ Format duration into mm:ss or hh:mm:ss
-        formatted_duration = (
-            f"{duration // 3600}:{(duration % 3600) // 60:02}:{duration % 60:02}"
-            if duration >= 3600
-            else f"{(duration % 3600) // 60}:{duration % 60:02}"
-        )
 
         print(f"🎶 Extracted Audio URL: {audio_url}")
         print(f"🖼  Thumbnail: {thumbnail_url}")
         print(f"📺  Video URL: {video_url}")
-        print(f"⏳ Duration: {formatted_duration}")
-        print(f"👀 Views: {view_count}")
-        print(f"👍 Likes: {like_count}")
 
         return {
                 "yt_track_id": yt_track_id,
@@ -65,9 +53,6 @@ def fetch_video_details(query):
                 "audio_url": audio_url,
                 "thumbnail_url": thumbnail_url,
                 "video_url": video_url,
-                "view_count": view_count,
-                "like_count": like_count,
-                "duration": formatted_duration,
         }
         
 

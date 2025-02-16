@@ -19,32 +19,43 @@ class ApiService {
 
   /// ✅ Fetch the next 5 songs from the backend using track_id and track_name
 
-  Future<List<Map<String, dynamic>>> fetchNextBatch() async {
-    final userId = await getUserId();
-    if (userId == null) {
-      print("❌ No user_id found. Can't fetch next batch.");
-      return [];
-    }
-
-    final uri = Uri.parse("$baseUrl/playback/youtube/audio_batch");
-    print("API Request: POST $uri");
-
-    final response = await http.post(
-      uri,
-      headers: {"Content-Type": "application/json"},
-      body: json.encode({"user_id": userId, "tracks": null}),
-    );
-
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      print("DATA: $data");
-
-      return List<Map<String, dynamic>>.from(data["songs"]);
-    } else {
-      print("❌ Failed to fetch next batch: ${response.statusCode}");
-      return [];
-    }
+Future<List<Map<String, String>>> fetchNextBatch() async {
+  final userId = await getUserId();
+  if (userId == null) {
+    print("❌ No user_id found. Can't fetch next batch.");
+    return [];
   }
+
+  final uri = Uri.parse("$baseUrl/playback/youtube/audio_batch");
+  print("API Request: POST $uri");
+
+  final response = await http.post(
+    uri,
+    headers: {"Content-Type": "application/json"},
+    body: json.encode({"user_id": userId, "tracks": null}),
+  );
+
+  if (response.statusCode == 200) {
+    final data = json.decode(response.body);
+    print("DATA: $data");
+
+    return (data["songs"] as List<dynamic>).map((track) {
+      return {
+        "track_id": track["track_id"]?.toString() ?? "",
+        "yt_track_id": track["yt_track_id"]?.toString() ?? "",
+        "track_name": track["track_name"]?.toString() ?? "",
+        "yt_track_name": track["yt_track_name"]?.toString() ?? "",
+        "audio_url": track["audio_url"]?.toString() ?? "",
+        "thumbnail_url": track["thumbnail_url"]?.toString() ?? "",
+        "video_url": track["video_url"]?.toString() ?? "",
+      };
+    }).toList();
+  } else {
+    print("❌ Failed to fetch next batch: ${response.statusCode}");
+    return [];
+  }
+}
+
 
 
 
@@ -63,7 +74,7 @@ class ApiService {
   }
 
   /// ✅ Fetch YouTube audio URL using track_id and track_name
-  Future<Map<String, dynamic>?> fetchYouTubeAudio(String trackId, String trackName) async {
+  Future<Map<String, String>?> fetchYouTubeAudio(String trackId, String trackName) async {
     final userId = await getUserId();
     if (userId == null) {
       print("❌ No user_id found. Can't fetch YouTube audio.");
@@ -280,7 +291,7 @@ class ApiService {
   /// Track user interactions: scrolling
   /// Fetch user profile data including metrics and activity
 
-  Future<Map<String, dynamic>> fetchUserProfile(int userId) async {
+  Future<Map<String, String>> fetchUserProfile(int userId) async {
     final url = Uri.parse("$baseUrl/users/$userId/profile");
     print("API Request: GET $url");
 
@@ -293,18 +304,10 @@ class ApiService {
         final data = json.decode(response.body);
 
         return {
-          "user_id": data["user_id"]?.toString() ?? "",  // Ensure it's a string
+          "user_id": data["user_id"]?.toString() ?? "",
           "username": data["username"] ?? "Unknown User",
-          "total_interactions": data["total_interactions"] ?? 0,
-          "recent_activity": List<Map<String, dynamic>>.from(
-            (data["recent_activity"] ?? []).map(
-              (activity) => {
-                "track_id": activity["track_id"]?.toString() ?? "Unknown Track",
-                "action": activity["action"]?.toString() ?? "Unknown Action",
-                "timestamp": activity["timestamp"]?.toString() ?? "",
-              },
-            ),
-          ),
+          "total_likes": data["total_likes"]?.toString() ?? "0",
+          "total_saves": data["total_saves"]?.toString() ?? "0",
         };
       } else {
         print("❌ Failed to fetch user profile: ${response.statusCode}");
@@ -315,38 +318,43 @@ class ApiService {
       return {}; // Return empty map on failure
     }
   }
-
   /// Fetch user's learning history
-  Future<List<Map<String, dynamic>>> fetchUserHistory(int userId) async {
-  final url = Uri.parse("$baseUrl/users/$userId/history");
-  print("API Request: GET $url");
 
-  try {
-    final response = await http.get(url);
-    print("Response Code: ${response.statusCode}");
-    print("Response Body: ${response.body}");
+  Future<List<Map<String, String>>> fetchUserHistory(int userId) async {
+    final url = Uri.parse("$baseUrl/users/$userId/history");
+    print("API Request: GET $url");
 
-    if (response.statusCode == 200) {
-      final List<dynamic> data = json.decode(response.body);
+    try {
+      final response = await http.get(url);
+      print("Response Code: ${response.statusCode}");
+      print("Response Body: ${response.body}");
 
-      return List<Map<String, dynamic>>.from(
-        data.map(
-          (history) => {
-            "track_id": history["track_id"]?.toString() ?? "Unknown Track",
-            "action": history["action"]?.toString() ?? "Unknown Action",
-            "timestamp": history["timestamp"]?.toString() ?? "",
-          },
-        ),
-      );
-    } else {
-      print("❌ Failed to fetch user history: ${response.statusCode}");
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+
+        return List<Map<String, String>>.from(
+          data.map(
+            (history) => {
+              "track_id": history["track_id"]?.toString() ?? "Unknown Track",
+              "track_name": history["track_name"] ?? "Unknown Title",
+              "yt_track_name": history["yt_track_name"] ?? "",
+              "yt_track_id": history["yt_track_id"] ?? "",
+              "audio_url": history["audio_url"] ?? "",
+              "thumbnail_url": history["thumbnail_url"] ?? "",
+              "video_url": history["video_url"] ?? "",
+              "timestamp": history["timestamp"]?.toString() ?? "",
+            },
+          ),
+        );
+      } else {
+        print("❌ Failed to fetch user history: ${response.statusCode}");
+        return [];
+      }
+    } catch (e) {
+      print("❌ Error fetching user history: $e");
       return [];
     }
-  } catch (e) {
-    print("❌ Error fetching user history: $e");
-    return [];
   }
-}
 
 
   /// ✅ Logout user from backend and clear local storage

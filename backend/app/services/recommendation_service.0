@@ -1,0 +1,109 @@
+# recommendation.py
+from app import db
+from app.models import User, Track, Listen, LikedSong, SavedSong
+import numpy as np
+import openai
+import pandas as pd
+from sklearn.metrics.pairwise import cosine_similarity
+
+# Set your OpenAI API key
+openai_api_key = "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"
+
+def get_embedding(text, model="text-embedding-ada-002"):
+    try:
+        response = openai.Embedding.create(input=[text], model=model)
+        return response['data'][0]['embedding']
+    except Exception as e:
+        print(f"Error generating embedding for '{text}': {e}")
+        return None
+
+def build_song_similarity_matrix():
+    """
+    Queries all tracks from the DB, computes embeddings for each (using the track title),
+    and returns a pandas DataFrame of cosine similarity scores.
+    """
+    tracks = Track.query.all()
+    song_titles = [track.title.strip().lower() for track in tracks]
+    
+    song_embeddings = {}
+    for title in song_titles:
+        emb = get_embedding(title)
+        if emb is not None:
+            song_embeddings[title] = np.array(emb)
+        else:
+            # Fallback: a zero vector (assumes embeddings of length 1536)
+            song_embeddings[title] = np.zeros(1536)
+    
+    # Build an embedding matrix in the same order as song_titles
+    embedding_matrix = np.array([song_embeddings[title] for title in song_titles])
+    sim_matrix = cosine_similarity(embedding_matrix)
+    
+    # Create a DataFrame for easy lookup
+    similarity_df = pd.DataFrame(sim_matrix, index=song_titles, columns=song_titles)
+    return similarity_df
+
+# Build (or cache) the similarity matrix (here we build it on-demand)
+song_similarity_df = build_song_similarity_matrix()
+
+def get_similar_songs(target_song, top_n=5):
+    """
+    Given a target song title, return a list of the top_n most similar song titles.
+    """
+    target_song = target_song.strip().lower()
+    if target_song not in song_similarity_df.index:
+        print(f"Warning: Song '{target_song}' not found in similarity matrix.")
+        return []
+    similar_series = song_similarity_df[target_song].sort_values(ascending=False)
+    # Skip the song itself and take the next top_n songs
+    similar_songs = similar_series.iloc[1:top_n+1].index.tolist()
+    return similar_songs
+
+def get_user_preferred_tracks(username):
+    """
+    Retrieves the set of tracks the user has interacted with
+    (via listens, likes, and saves).
+    """
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        print(f"No user found with username '{username}'.")
+        return []
+    
+    # Get track IDs from listens, likes, and saves
+    listen_ids = [l.track_id for l in user.listens]
+    liked_ids = [l.track_id for l in user.liked_songs]
+    saved_ids = [s.track_id for s in user.saved_songs]
+    
+    # Union of all track IDs
+    all_track_ids = set(listen_ids + liked_ids + saved_ids)
+    
+    # Retrieve corresponding Track records
+    tracks = Track.query.filter(Track.id.in_(all_track_ids)).all()
+    track_titles = [track.title.strip().lower() for track in tracks]
+    return track_titles
+
+def recommend_songs(username, top_n_recommendations=5):
+    """
+    For a given user, generate song recommendations.
+    The approach is:
+      1. Retrieve the user's preferred tracks (from listens, likes, saves).
+      2. For each of those tracks, fetch the top 2 similar songs.
+      3. Remove duplicates and any songs the user already engaged with.
+      4. Return the final list (up to top_n_recommendations).
+    """
+    preferred_tracks = get_user_preferred_tracks(username)
+    if not preferred_tracks:
+        print("No preferred tracks found; cannot generate recommendations.")
+        return []
+    
+    recommendations = []
+    for song in preferred_tracks:
+        recommendations.extend(get_similar_songs(song, top_n=2))
+    
+    # Remove duplicates and songs the user already interacted with
+    unique_recs = list(set(recommendations) - set(preferred_tracks))
+    return unique_recs[:top_n_recommendations]
+
+# Example usage:
+if __name__ == "__main__":
+    recs = recommend_songs("Dean")
+    print(f"Recommended Songs for Dean: {recs}")

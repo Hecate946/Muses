@@ -80,3 +80,4 @@ def track_scroll():
     db.session.commit()
 
     return jsonify({"message": "Scroll recorded"})
+

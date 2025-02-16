@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
- 
-import '../services/api_service.dart';
+import 'lesson_plan_screen.dart';
+import '../components/muses_app_bar.dart';
  
 class Song {
   final String id;
@@ -10,6 +10,8 @@ class Song {
   final String difficulty;
   final String genre;
   final String duration;
+  final String lessonId;
+  final String description;
  
   Song({
     required this.id,
@@ -18,6 +20,8 @@ class Song {
     required this.difficulty,
     required this.genre,
     required this.duration,
+    required this.lessonId,
+    required this.description,
   });
 }
  
@@ -43,46 +47,47 @@ class _SongsToLearnScreenState extends State<SongsToLearnScreen> with SingleTick
   Future<void> _loadSongs() async {
     setState(() => isLoading = true);
     try {
-      // TODO: Replace with actual user ID from auth system
-      final int userId = 1;
       
       final recommendedData = await _apiService.fetchRecommendedSongs();
       final savedData = await _apiService.fetchSavedSongs();
 
       setState(() {
-        recommendedSongs = recommendedData.map((data) {
-          try {
-            return Song(
-              id: (data['id'] ?? '').toString(),
-              title: (data['title'] ?? 'Untitled').toString(),
-              artist: (data['artist'] ?? 'Unknown Artist').toString(),
-              difficulty: (data['difficulty'] ?? 'Unknown').toString(),
-              genre: (data['genre'] ?? 'Unknown').toString(),
-              duration: (data['duration'] ?? 'Unknown').toString(),
-            );
-          } catch (e) {
-            print('Error parsing recommended song data: $data');
-            print('Error details: $e');
-            return null;
-          }
-        }).whereType<Song>().toList();
- 
-        savedSongs = savedData.map((data) {
-          try {
-            return Song(
-              id: (data['id'] ?? '').toString(),
-              title: (data['title'] ?? 'Untitled').toString(),
-              artist: (data['artist'] ?? 'Unknown Artist').toString(),
-              difficulty: (data['difficulty'] ?? 'Unknown').toString(),
-              genre: (data['genre'] ?? 'Unknown').toString(),
-              duration: (data['duration'] ?? 'Unknown').toString(),
-            );
-          } catch (e) {
-            print('Error parsing saved song data: $data');
-            print('Error details: $e');
-            return null;
-          }
-        }).whereType<Song>().toList();
+        recommendedSongs = [
+          Song(
+            id: 'moonlight_sonata',
+            title: 'Moonlight Sonata - 1st Movement',
+            artist: 'Ludwig van Beethoven',
+            difficulty: 'Intermediate',
+            genre: 'Classical',
+            duration: '5:30',
+            lessonId: 'moonlight_sonata',
+            description: 'A haunting and beautiful piece composed in 1801. This lesson focuses on the famous first movement, teaching proper fingering, pedaling, and dynamic control.',
+          ),
+          Song(
+            id: 'lose_yourself',
+            title: 'Lose Yourself',
+            artist: 'Eminem',
+            difficulty: 'Beginner',
+            genre: 'Hip Hop',
+            duration: '5:26',
+            lessonId: 'lose_yourself',
+            description: 'An iconic hip-hop track from 2002. Learn the famous piano riff that underlies this motivational anthem, focusing on rhythm and chord progressions.',
+          ),
+        ];
+        
+        // Initialize saved songs list with Bach's Prelude
+        savedSongs = [
+          Song(
+            id: 'bach_prelude',
+            title: 'Prelude in C Major (BWV 846)',
+            artist: 'Johann Sebastian Bach',
+            difficulty: 'Beginner',
+            genre: 'Classical',
+            duration: '2:30',
+            lessonId: 'bach_prelude',
+            description: 'The first prelude from Bach\'s Well-Tempered Clavier is a perfect introduction to Baroque music. Its repeating pattern makes it accessible while teaching essential piano techniques.',
+          ),
+        ];
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -104,30 +109,50 @@ class _SongsToLearnScreenState extends State<SongsToLearnScreen> with SingleTick
       context: context,
       builder: (context) => AlertDialog(
         title: Text(song.title),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Artist: ${song.artist}'),
-            SizedBox(height: 8),
-            Text('Genre: ${song.genre}'),
-            SizedBox(height: 8),
-            Text('Difficulty: ${song.difficulty}'),
-            SizedBox(height: 8),
-            Text('Duration: ${song.duration}'),
-          ],
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Artist: ${song.artist}',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 12),
+              Text('Description:',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              Text(song.description),
+              SizedBox(height: 12),
+              Text('Genre: ${song.genre}'),
+              SizedBox(height: 8),
+              Text('Difficulty: ${song.difficulty}'),
+              SizedBox(height: 8),
+              Text('Duration: ${song.duration}'),
+            ],
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text('Close'),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () {
-              // TODO: Implement start learning functionality
               Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => LessonPlanScreen(
+                    songId: song.lessonId,
+                    title: '${song.title} - Lesson Plan',
+                  ),
+                ),
+              );
             },
             child: Text('Start Learning'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+              foregroundColor: Colors.white,
+              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
           ),
         ],
       ),
@@ -184,19 +209,27 @@ class _SongsToLearnScreenState extends State<SongsToLearnScreen> with SingleTick
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Songs to Learn'),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: [
-            Tab(text: 'Recommended'),
-            Tab(text: 'Saved'),
-          ],
-        ),
+      backgroundColor: Colors.grey[50],
+      appBar: MusesAppBar(
+        title: 'Songs to Learn',
+        showLogo: true,
       ),
       body: SafeArea(
         child: Column(
           children: [
+            Container(
+              color: Colors.white,
+              child: TabBar(
+                controller: _tabController,
+                tabs: [
+                  Tab(text: 'Recommended'),
+                  Tab(text: 'Saved'),
+                ],
+                labelColor: Colors.black87,
+                unselectedLabelColor: Colors.grey,
+                indicatorColor: Colors.black87,
+              ),
+            ),
             Expanded(
               child: TabBarView(
                 controller: _tabController,

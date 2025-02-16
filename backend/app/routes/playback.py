@@ -1,7 +1,6 @@
 from flask import Blueprint, request, jsonify
 from app.utils.youtube_utils import fetch_video_details
 from app import db
-from app.models import Interaction
 from cachetools import LRUCache
 
 playback_bp = Blueprint("playback", __name__)
@@ -40,11 +39,6 @@ def get_youtube_audio():
 
         user_cache[cache_key] = track_data  # ✅ Store in cache
         print(f"⚡ User {user_id} Cached: {cache_key}")
-
-    # ✅ Log interaction
-    new_interaction = Interaction(user_id=user_id, track_id=track_id, action="play")
-    db.session.add(new_interaction)
-    db.session.commit()
 
     return jsonify(track_data)
 
@@ -108,21 +102,14 @@ def get_youtube_audio_batch():
             "audio_url": video_details.get("audio_url", ""),
             "thumbnail_url": video_details.get("thumbnail_url", ""),
             "video_url": video_details.get("video_url", ""),
-            "view_count": video_details.get("view_count", 0),
-            "like_count": video_details.get("like_count", 0),
-            "duration": video_details.get("duration", ""),
         })
 
-        # ✅ Log interaction
-        print(f"📝 Logging interaction for track {track_id} (user {user_id}).")
-        new_interaction = Interaction(user_id=user_id, track_id=track_id, action="prefetch")
-        db.session.add(new_interaction)
-
-    db.session.commit()
     print(f"✅ Batch processing complete. Returning {len(results)} results.")
 
     return jsonify({"songs": results})
 
+
+import random
 
 def generate_new_batch(user_id):
     """✅ Generates a new batch of recommended tracks for the user."""
@@ -130,5 +117,11 @@ def generate_new_batch(user_id):
         {"track_id": "b12345-6789", "track_name": "Imagine"},
         {"track_id": "c98765-4321", "track_name": "Bohemian Rhapsody"},
         {"track_id": "x11111-2222", "track_name": "Moonlight Sonata"},
+        {"track_id": "z22222-3333", "track_name": "Clair de Lune"},
+        {"track_id": "m54321-9999", "track_name": "Shape of You"},
+        {"track_id": "a88888-7777", "track_name": "Fur Elise"},
+        {"track_id": "t55555-6666", "track_name": "Nocturne Op.9 No.2"},
+        {"track_id": "g33333-4444", "track_name": "Hallelujah"},
     ]
-    return sample_songs[:5]  # ✅ Return up to 5 new tracks
+
+    return random.sample(sample_songs, k=min(5, len(sample_songs)))  # ✅ Return 5 random tracks

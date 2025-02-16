@@ -54,13 +54,7 @@ class MusicProvider extends ChangeNotifier {
     try {
       final newTracks = await _apiService.fetchNextBatch();
       if (newTracks.isNotEmpty) {
-        _queue.addAll(newTracks.map((track) => {
-              "track_id": track["track_id"] ?? "",
-              "track_name": track["track_name"] ?? "",
-              "audio_url": track["audio_url"] ?? "",
-              "video_id": track["video_id"] ?? "",
-              "thumbnail_url": track["thumbnail_url"] ?? "",
-            }));
+        _queue.addAll(newTracks);
         print("✅ Prefetched next batch (${newTracks.length} songs)");
       } else {
         print("⚠️ No more songs available.");
