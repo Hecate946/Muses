@@ -1,0 +1,57 @@
+# .gitignore for Flutter project
+# Flutter build files
+build/
+.dart_tool/
+.packages
+.pub-cache/
+.idea/
+android/.gradle/
+android/app/key.jks
+android/key.properties
+**/flutter_export_environment.sh
+
+# iOS build files
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/
+ios/.generated/
+xcuserdata/
+
+# VSCode and IntelliJ
+.vscode/
+.idea/
+*.iml
+
+# Flutter dependencies
+pubspec.lock
+
+# Python Flask Backend .gitignore
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.so
+
+# Virtual environment
+venv/
+.env
+*.venv
+
+# Flask specific
+instance/
+migrations/
+database/*.sqlite3
+
+# Logs and local files
+*.log
+*.sqlite
+*.db
+.DS_Store
+
+# Python dependencies
+pip-log.txt
+pip-delete-this-directory.txt
+*.egg-info/
+
+
+*.webm
+*.mkv
