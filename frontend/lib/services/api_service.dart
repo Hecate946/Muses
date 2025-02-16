@@ -9,7 +9,7 @@ class ApiService {
     return Platform.isAndroid ? '10.0.2.2' : 'localhost';
   }
 
-  static String get baseUrl => 'http://$_baseHost:5001';
+  static String get baseUrl => 'http://$_baseHost:5000';
 
   /// ✅ Get stored `user_id` from local storage
   Future<int?> getUserId() async {
@@ -18,7 +18,8 @@ class ApiService {
   }
 
   /// ✅ Fetch the next 5 songs from the backend using track_id and track_name
-  Future<List<Map<String, String>>> fetchNextBatch() async {
+
+  Future<List<Map<String, dynamic>>> fetchNextBatch() async {
     final userId = await getUserId();
     if (userId == null) {
       print("❌ No user_id found. Can't fetch next batch.");
@@ -31,27 +32,20 @@ class ApiService {
     final response = await http.post(
       uri,
       headers: {"Content-Type": "application/json"},
-      body: json.encode({"user_id": userId, "tracks": null}), // ✅ Allow backend to generate batch
+      body: json.encode({"user_id": userId, "tracks": null}),
     );
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
+      print("DATA: $data");
 
-      return List<Map<String, String>>.from(
-        data["songs"].map<Map<String, String>>((song) => {
-              "track_id": song["track_id"]?.toString() ?? "",
-              "track_name": song["title"]?.toString() ?? "",
-              "instrumentation": song["instrumentation"]?.toString() ?? "",
-              "audio_url": song["audio_url"]?.toString() ?? "",
-              "videoId": song["track_id"]?.toString() ?? "",
-              "thumbnailUrl": "https://i.ytimg.com/vi/${song["track_id"]}/mqdefault.jpg",
-            }),
-      );
+      return List<Map<String, dynamic>>.from(data["songs"]);
     } else {
       print("❌ Failed to fetch next batch: ${response.statusCode}");
       return [];
     }
   }
+
 
 
   /// ✅ Fetch a list of music tracks based on instrumentation

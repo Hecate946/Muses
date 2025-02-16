@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class MusicCard extends StatefulWidget {
   final dynamic musicData;
@@ -11,103 +12,158 @@ class MusicCard extends StatefulWidget {
   _MusicCardState createState() => _MusicCardState();
 }
 
-class _MusicCardState extends State<MusicCard> {
+class _MusicCardState extends State<MusicCard> with SingleTickerProviderStateMixin {
   bool isFavorite = false;
+  bool isSaved = false;
+
+  void _launchURL(String url) async {
+    try {
+      if (await canLaunch(url)) {
+        await launch(url);
+      } else {
+        print("Could not launch $url");
+      }
+    } catch (e) {
+      print("Error launching URL: $e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    String thumbnailUrl = widget.musicData["thumbnail_url"] ?? "";
+    String videoUrl = widget.musicData["video_url"] ?? "";
+    String trackName = widget.musicData["track_name"] ?? "Unknown Title";
 
-    return Stack(
-      children: [
-        Container(
-          height: MediaQuery.of(context).size.height,
-          decoration: BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage("assets/music_bg.jpg"),
-              fit: BoxFit.cover,
+    return Container(
+      height: MediaQuery.of(context).size.height,
+      decoration: BoxDecoration(
+        color: Color(0xFFFFF5E1), // Warm cream background
+      ),
+      child: Column(
+        children: [
+          // Spacer to move thumbnail lower
+          Spacer(),
+
+          // Centered YouTube Thumbnail with shadow
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                width: MediaQuery.of(context).size.width * 0.85,
+                height: MediaQuery.of(context).size.height * 0.22, // Adjusted height
+                decoration: BoxDecoration(
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black38,
+                      blurRadius: 8,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
+                  image: DecorationImage(
+                    image: thumbnailUrl.isNotEmpty
+                        ? NetworkImage(thumbnailUrl) as ImageProvider
+                        : AssetImage("assets/music_bg.jpg"),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
             ),
           ),
-        ),
-        Container(
-          height: MediaQuery.of(context).size.height,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.center,
-              colors: [
-                Colors.black.withOpacity(0.2),
-                Colors.transparent,
-              ],
+
+          SizedBox(height: 20),
+
+          // Track Name
+          Text(
+            trackName,
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
             ),
+            textAlign: TextAlign.center,
           ),
-        ),
-        Container(
-          height: MediaQuery.of(context).size.height,
-          padding: EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
+
+          SizedBox(height: 20),
+
+          // Favorite & Save Icons with Slow Animation
+          Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.symmetric(horizontal: 20),
-                child: Text(
-                  widget.musicData["track_name"] ?? "Unknown Title",
-                  style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    shadows: [
-                      Shadow(
-                        offset: Offset(0, 1),
-                        blurRadius: 3.0,
-                        color: Colors.black.withOpacity(0.5),
-                      ),
-                    ],
+              // Favorite Icon
+              AnimatedContainer(
+                duration: Duration(milliseconds: 400), // Slower animation
+                curve: Curves.easeInOut,
+                child: IconButton(
+                  icon: Icon(
+                    isFavorite ? Icons.favorite : Icons.favorite_border,
+                    color: isFavorite ? Colors.red : Colors.black54,
+                    size: 32,
                   ),
-                  textAlign: TextAlign.center,
+                  onPressed: () {
+                    setState(() {
+                      isFavorite = !isFavorite;
+                    });
+                    if (isFavorite) {
+                      widget.apiService.likeTrack(widget.musicData["track_id"], widget.musicData["track_name"]);
+                    }
+                  },
                 ),
               ),
-              SizedBox(height: 10),
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.symmetric(horizontal: 40),
-                child: Text(
-                  widget.musicData["instrumentation"] ?? "Unknown Instrumentation",
-                  style: TextStyle(
-                    fontSize: 20,
-                    color: Colors.white,
-                    shadows: [
-                      Shadow(
-                        offset: Offset(0, 1),
-                        blurRadius: 2.0,
-                        color: Colors.black.withOpacity(0.3),
-                      ),
-                    ],
+
+              SizedBox(width: 20),
+
+              // Save to Learn Icon
+              AnimatedContainer(
+                duration: Duration(milliseconds: 400), // Slower animation
+                curve: Curves.easeInOut,
+                child: IconButton(
+                  icon: Icon(
+                    isSaved ? Icons.bookmark : Icons.bookmark_border,
+                    color: isSaved ? Colors.green : Colors.black54,
+                    size: 32,
                   ),
-                  textAlign: TextAlign.center,
+                  onPressed: () {
+                    setState(() {
+                      isSaved = !isSaved;
+                    });
+                    print(isSaved ? "Saved to Learn" : "Removed from Learn List");
+                  },
                 ),
-              ),
-              SizedBox(height: 20),
-              IconButton(
-                icon: Icon(
-                  isFavorite ? Icons.favorite : Icons.favorite_border,
-                  color: isFavorite ? Colors.red : Colors.white,
-                  size: 32,
-                ),
-                onPressed: () {
-                  setState(() {
-                    isFavorite = !isFavorite;
-                  });
-                  if (isFavorite) {
-                    widget.apiService.likeTrack(widget.musicData["id"], widget.musicData["title"]);
-                  }
-                },
               ),
             ],
           ),
-        ),
-      ],
+
+          Spacer(), // Pushes the link to the bottom
+
+          // Clickable YouTube Link at Bottom
+          MouseRegion(
+            cursor: SystemMouseCursors.click,
+            child: GestureDetector(
+              onTap: () => _launchURL(videoUrl),
+              child: Container(
+                padding: EdgeInsets.symmetric(vertical: 10),
+                decoration: BoxDecoration(
+                  border: Border(
+                    top: BorderSide(color: Colors.black26, width: 1.5),
+                  ),
+                ),
+                width: double.infinity,
+                child: Text(
+                  "🎬 Watch on YouTube",
+                  style: TextStyle(
+                    color: Colors.blue,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    decoration: TextDecoration.underline,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

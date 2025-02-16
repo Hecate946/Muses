@@ -50,6 +50,7 @@ class MusicProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
+
     try {
       final newTracks = await _apiService.fetchNextBatch();
       if (newTracks.isNotEmpty) {
@@ -57,8 +58,8 @@ class MusicProvider extends ChangeNotifier {
               "track_id": track["track_id"] ?? "",
               "track_name": track["track_name"] ?? "",
               "audio_url": track["audio_url"] ?? "",
-              "videoId": track["videoId"] ?? "",
-              "thumbnailUrl": track["thumbnailUrl"] ?? "",
+              "video_id": track["video_id"] ?? "",
+              "thumbnail_url": track["thumbnail_url"] ?? "",
             }));
         print("✅ Prefetched next batch (${newTracks.length} songs)");
       } else {
