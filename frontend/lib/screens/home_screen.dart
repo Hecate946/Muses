@@ -2,9 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/music_provider.dart';
 import '../components/music_card.dart';
+import '../services/api_service.dart';
 
-class HomeScreen extends StatelessWidget {
-  final TextEditingController _searchController = TextEditingController();
+class HomeScreen extends StatefulWidget {
+  @override
+  _HomeScreenState createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final ApiService apiService = ApiService(); // Ensure ApiService instance
+
+  @override
+  void initState() {
+    super.initState();
+    // Automatically fetch music for "violin" on app startup
+    Future.delayed(Duration.zero, () {
+      Provider.of<MusicProvider>(context, listen: false).searchMusic("violin");
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,36 +29,18 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text("Music Discovery"),
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: "Search by Instrument (e.g., Violin)",
-                suffixIcon: IconButton(
-                  icon: Icon(Icons.search),
-                  onPressed: () {
-                    musicProvider.searchMusic(_searchController.text);
-                  },
-                ),
-              ),
+      body: musicProvider.isLoading
+          ? Center(child: CircularProgressIndicator())
+          : PageView.builder(
+              scrollDirection: Axis.vertical,
+              itemCount: musicProvider.musicList.length,
+              itemBuilder: (context, index) {
+                return MusicCard(
+                  musicData: musicProvider.musicList[index], // Pass musicData
+                  apiService: apiService, // Pass apiService
+                );
+              },
             ),
-          ),
-          Expanded(
-            child: musicProvider.isLoading
-                ? Center(child: CircularProgressIndicator())
-                : PageView.builder(
-                    scrollDirection: Axis.vertical,
-                    itemCount: musicProvider.musicList.length,
-                    itemBuilder: (context, index) {
-                      return MusicCard(musicProvider.musicList[index]);
-                    },
-                  ),
-          ),
-        ],
-      ),
     );
   }
 }
