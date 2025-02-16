@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 class DbService {
   static const String baseUrl = "http://10.0.2.2:5000/db";
 
-  static Future<void> addTrack(Map<String, dynamic> trackData) async {
+  static Future<void> addTrack(Map<String, String> trackData) async {
     final response = await http.post(
       Uri.parse("$baseUrl/add_track"),
       headers: {"Content-Type": "application/json"},
@@ -15,7 +15,7 @@ class DbService {
     }
   }
 
-  static Future<void> addUser(Map<String, dynamic> userData) async {
+  static Future<void> addUser(Map<String, String> userData) async {
     final response = await http.post(
       Uri.parse("$baseUrl/add_user"),
       headers: {"Content-Type": "application/json"},
@@ -26,7 +26,7 @@ class DbService {
     }
   }
 
-  static Future<void> addListen(Map<String, dynamic> listenData) async {
+  static Future<void> addListen(Map<String, String> listenData) async {
     final response = await http.post(
       Uri.parse("$baseUrl/add_listen"),
       headers: {"Content-Type": "application/json"},
@@ -37,7 +37,7 @@ class DbService {
     }
   }
 
-  static Future<void> addLike(Map<String, dynamic> likeData) async {
+  static Future<void> addLike(Map<String, String> likeData) async {
     final response = await http.post(
       Uri.parse("$baseUrl/add_like"),
       headers: {"Content-Type": "application/json"},
@@ -48,7 +48,7 @@ class DbService {
     }
   }
 
-  static Future<void> addSave(Map<String, dynamic> saveData) async {
+  static Future<void> addSave(Map<String, String> saveData) async {
     final response = await http.post(
       Uri.parse("$baseUrl/add_save"),
       headers: {"Content-Type": "application/json"},
@@ -59,7 +59,7 @@ class DbService {
     }
   }
 
-  static Future<void> addLessonPlan(Map<String, dynamic> lessonPlanData) async {
+  static Future<void> addLessonPlan(Map<String, String> lessonPlanData) async {
     final response = await http.post(
       Uri.parse("$baseUrl/add_lesson_plan"),
       headers: {"Content-Type": "application/json"},

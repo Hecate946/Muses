@@ -18,7 +18,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String _joinDate = '';
   int _songsLearned = 0;
   List<String> _instruments = [];
-  List<Map<String, dynamic>> _recentActivity = [];
+  List<Map<String, String>> _recentActivity = [];
 
   @override
   void initState() {
@@ -221,7 +221,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: _recentActivity.map((activity) {
           return Column(
             children: [
-              _buildActivityItem(activity['action'], activity['timestamp'],
+              _buildActivityItem(activity['action']!, activity['timestamp']!,
                   Icons.music_note),
               if (activity != _recentActivity.last) Divider(height: 1),
             ],
