@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/api_service.dart';
 import '../providers/music_provider.dart';
+import '../main.dart';
 
 class SearchScreen extends StatefulWidget {
   @override
@@ -19,7 +20,7 @@ class _SearchScreenState extends State<SearchScreen> {
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(60),
         child: AppBar(
-          backgroundColor: Colors.white,
+          backgroundColor: Colors.transparent,
           elevation: 0,
           automaticallyImplyLeading: false,
           titleSpacing: 0,
@@ -29,7 +30,6 @@ class _SearchScreenState extends State<SearchScreen> {
               children: [
                 Container(
                   width: 56,
-                  alignment: Alignment.center,
                   child: IconButton(
                     padding: EdgeInsets.zero,
                     icon: Icon(Icons.arrow_back, color: Colors.black),
@@ -41,18 +41,19 @@ class _SearchScreenState extends State<SearchScreen> {
                     height: 40,
                     decoration: BoxDecoration(
                       color: Colors.grey[100],
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                     child: TextField(
                       controller: searchController,
                       autofocus: true,
                       decoration: InputDecoration(
-                        hintText: 'Search for songs, genre, instruments, artist...',
-                        hintStyle: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                        prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                        hintText: 'Search for songs, genre, instruments...',
+                        hintStyle: TextStyle(fontSize: 16, color: Colors.grey[600]),
                         border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        suffixIcon: Icon(Icons.search, color: Colors.grey[600]),
                       ),
+                      style: TextStyle(color: Colors.black, fontSize: 16),
                       onSubmitted: (value) async {
                         if (value.isNotEmpty) {
                           try {
@@ -73,86 +74,109 @@ class _SearchScreenState extends State<SearchScreen> {
         ),
       ),
       body: Padding(
-        padding: EdgeInsets.only(left: 56, right: 16, top: 8, bottom: 8),
+        padding: EdgeInsets.only(left: 56, right: 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'You may like',
               style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
                 color: Colors.black,
               ),
             ),
-            SizedBox(height: 16),
-            ...List.generate(5, (index) {
-              final songData = [
-                {
-                  'title': 'Classical Symphony Orchestra',
-                  'thumbnail': 'https://i.ytimg.com/vi/DAyUzxDB9eE/hqdefault.jpg',
-                },
-                {
-                  'title': 'Piano Sonatas Collection',
-                  'thumbnail': 'https://i.ytimg.com/vi/c1iZXyWLnXg/hqdefault.jpg',
-                },
-                {
-                  'title': 'Violin Concertos Masterpieces',
-                  'thumbnail': 'https://i.ytimg.com/vi/6JQm5aSjX6g/hqdefault.jpg',
-                },
-                {
-                  'title': 'Chamber Music Ensemble',
-                  'thumbnail': 'https://i.ytimg.com/vi/13ygvpIg-S0/hqdefault.jpg',
-                },
-                {
-                  'title': 'Baroque Period Highlights',
-                  'thumbnail': 'https://i.ytimg.com/vi/SaCheA6Njc4/hqdefault.jpg',
-                },
-              ];
-              return Padding(
-                padding: EdgeInsets.symmetric(vertical: 4),
-                child: ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: Image.network(
-                      songData[index]['thumbnail']!,
-                      width: 50,
-                      height: 50,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          width: 50,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            color: Colors.grey[200],
-                            borderRadius: BorderRadius.circular(4),
+            SizedBox(height: 20),
+            ListView.builder(
+              shrinkWrap: true,
+              itemCount: 5,
+              itemBuilder: (context, index) {
+                final recommendations = [
+                  {
+                    'title': 'Symphony No. 40 in G minor',
+                    'instrumentation': 'Wolfgang Amadeus Mozart - Orchestra',
+                    'image': 'https://i.ytimg.com/vi/jgpJVI3tDbY/mqdefault.jpg',
+                    'videoId': 'jgpJVI3tDbY'
+                  },
+                  {
+                    'title': 'Moonlight Sonata',
+                    'instrumentation': 'Ludwig van Beethoven - Piano',
+                    'image': 'https://i.ytimg.com/vi/c1iZXyWLnXg/mqdefault.jpg',
+                    'videoId': 'c1iZXyWLnXg'
+                  },
+                  {
+                    'title': 'Violin Concerto in E major',
+                    'instrumentation': 'Johann Sebastian Bach - Violin & Orchestra',
+                    'image': 'https://i.ytimg.com/vi/6JQm5aSjX6g/mqdefault.jpg',
+                    'videoId': '6JQm5aSjX6g'
+                  },
+                  {
+                    'title': 'String Quartet No. 14 in D minor',
+                    'instrumentation': 'Franz Schubert - Chamber Ensemble',
+                    'image': 'https://i.ytimg.com/vi/13ygvpIg-S0/mqdefault.jpg',
+                    'videoId': '13ygvpIg-S0'
+                  },
+                  {
+                    'title': 'Brandenburg Concerto No. 3',
+                    'instrumentation': 'Johann Sebastian Bach - Orchestra',
+                    'image': 'https://i.ytimg.com/vi/SaCheA6Njc4/mqdefault.jpg',
+                    'videoId': 'SaCheA6Njc4'
+                  },
+                ];
+                final item = recommendations[index];
+                return InkWell(
+                  onTap: () {
+                    final musicProvider = Provider.of<MusicProvider>(context, listen: false);
+                    musicProvider.addToQueue({
+                      'title': item['title'] ?? '',
+                      'instrumentation': item['instrumentation'] ?? '',
+                      'videoId': item['videoId'] ?? '',
+                      'thumbnailUrl': item['image'] ?? '',
+                    });
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => MainScreen()),
+                    );
+                  },
+                  child: Padding(
+                    padding: EdgeInsets.only(bottom: 16),
+                    child: Row(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: Image.network(
+                            item['image']!,
+                            width: 40,
+                            height: 40,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                width: 40,
+                                height: 40,
+                                color: Colors.grey[300],
+                                child: Icon(Icons.music_note, color: Colors.grey[600]),
+                              );
+                            },
                           ),
-                          child: Icon(Icons.music_note, color: Colors.grey[600]),
-                        );
-                      },
+                        ),
+                        SizedBox(width: 12),
+                        Text(
+                          item['title']!,
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  title: Text(
-                    songData[index]['title']!,
-                    style: TextStyle(fontSize: 16),
-                  ),
-                  onTap: () async {
-                    try {
-                      var results = await apiService.fetchMusicByInstrument(songData[index]['title']!);
-                      print("Fetched results for ${songData[index]['title']}: $results");
-                      // You can update state or navigate based on results
-                      Navigator.pop(context);
-                    } catch (e) {
-                      print("Error fetching results: $e");
-                    }
-                  },
-                ),
-              );
-            }),
+                );
+              },
+            ),
           ],
         ),
       ),
     );
   }
 }
+

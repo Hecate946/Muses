@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'home_screen.dart';
+import 'screen_manager.dart';
 import 'signup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -27,7 +27,7 @@ class _LoginScreenState extends State<LoginScreen> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     if (prefs.containsKey("user_id")) {
       Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (context) => HomeScreen()));
+          context, MaterialPageRoute(builder: (context) => ScreenManager()));
     }
   }
 
@@ -57,7 +57,7 @@ class _LoginScreenState extends State<LoginScreen> {
       await prefs.setInt("user_id", data["user_id"]); // ✅ Save login state
 
       Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (context) => HomeScreen()));
+          context, MaterialPageRoute(builder: (context) => ScreenManager()));
     } else {
       setState(() {
         _errorMessage = "Invalid username or password";

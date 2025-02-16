@@ -52,7 +52,7 @@ class _MusicCardState extends State<MusicCard> {
                 width: double.infinity,
                 padding: EdgeInsets.symmetric(horizontal: 20),
                 child: Text(
-                  widget.musicData["title"] ?? "Unknown Title",
+                  widget.musicData["track_name"] ?? "Unknown Title",
                   style: TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.bold,

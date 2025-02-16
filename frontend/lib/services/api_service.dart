@@ -9,7 +9,7 @@ class ApiService {
     return Platform.isAndroid ? '10.0.2.2' : 'localhost';
   }
 
-  static String get baseUrl => 'http://$_baseHost:5000';
+  static String get baseUrl => 'http://$_baseHost:5001';
 
   /// ✅ Get stored `user_id` from local storage
   Future<int?> getUserId() async {
@@ -39,9 +39,12 @@ class ApiService {
 
       return List<Map<String, String>>.from(
         data["songs"].map<Map<String, String>>((song) => {
-              "track_id": song["track_id"]?.toString() ?? "",   // ✅ Ensure it's a string
-              "track_name": song["track_name"]?.toString() ?? "", // ✅ Convert null to empty string
-              "audio_url": song["audio_url"]?.toString() ?? "", // ✅ Convert null to empty string
+              "track_id": song["track_id"]?.toString() ?? "",
+              "track_name": song["title"]?.toString() ?? "",
+              "instrumentation": song["instrumentation"]?.toString() ?? "",
+              "audio_url": song["audio_url"]?.toString() ?? "",
+              "videoId": song["track_id"]?.toString() ?? "",
+              "thumbnailUrl": "https://i.ytimg.com/vi/${song["track_id"]}/mqdefault.jpg",
             }),
       );
     } else {
@@ -174,28 +177,7 @@ class ApiService {
     }
   }
 
-  /// ✅ Register user and store `user_id` in local storage
-  Future<void> registerUser(String username) async {
-    final url = Uri.parse("$baseUrl/auth/register");
-    final body = json.encode({"username": username});
 
-    print("API Request: POST $url");
-    print("Request Body: $body");
-
-    final response = await http.post(url, headers: {"Content-Type": "application/json"}, body: body);
-
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      int userId = data["user_id"];
-
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setInt("user_id", userId);
-
-      print("✅ User registered with ID: $userId");
-    } else {
-      throw Exception("Failed to register user: ${response.statusCode}");
-    }
-  }
 
   /// ✅ Logout user (removes `user_id` from local storage)
   Future<void> logout() async {
@@ -204,7 +186,40 @@ class ApiService {
     print("✅ User logged out.");
   }
 
- /// Track user interactions: scrolling
+  /// ✅ Register a new user
+  Future<void> registerUser(String username, String password) async {
+    final url = Uri.parse("$baseUrl/auth/register");
+    print("API Request: POST $url");
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({
+          "username": username,
+          "password": password,
+        }),
+      );
+
+      print("Response status: ${response.statusCode}");
+      print("Response body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setInt("user_id", data["user_id"]);
+      } else if (response.statusCode == 409) {
+        throw Exception("Username already taken");
+      } else {
+        throw Exception("Registration failed: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("❌ Registration error: $e");
+      throw e;
+    }
+  }
+
+  /// Track user interactions: scrolling
   /// Fetch user profile data including metrics and activity
 
   Future<Map<String, dynamic>> fetchUserProfile(int userId) async {

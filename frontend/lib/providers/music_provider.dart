@@ -19,13 +19,29 @@ class MusicProvider extends ChangeNotifier {
     initializeQueue(); // ✅ Start by fetching the first batch of songs
   }
 
-  /// ✅ Initializes the queue with the first batch of 5 songs
+  /// Initializes the queue with tracks from the backend
   Future<void> initializeQueue() async {
     if (_queue.isEmpty) {
-      await fetchNextBatch(); // ✅ Fetch the first batch
+      await fetchNextBatch();
+      if (_queue.isNotEmpty) {
+        playTrack(0);
+      }
     } else {
       playTrack(0);
     }
+    notifyListeners();
+  }
+
+  void addToQueue(Map<String, String> track) {
+    _queue.insert(0, {
+      'track_id': track['videoId'] ?? '',
+      'track_name': track['title'] ?? '',
+      'instrumentation': track['instrumentation'] ?? '',
+      'thumbnailUrl': track['thumbnailUrl'] ?? '',
+      'videoId': track['videoId'] ?? '',
+    });
+    playTrack(0);
+    notifyListeners();
   }
 
   /// ✅ Fetches the next 5 songs from the backend using track_id and track_name
@@ -41,6 +57,8 @@ class MusicProvider extends ChangeNotifier {
               "track_id": track["track_id"] ?? "",
               "track_name": track["track_name"] ?? "",
               "audio_url": track["audio_url"] ?? "",
+              "videoId": track["videoId"] ?? "",
+              "thumbnailUrl": track["thumbnailUrl"] ?? "",
             }));
         print("✅ Prefetched next batch (${newTracks.length} songs)");
       } else {
