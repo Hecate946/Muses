@@ -14,19 +14,8 @@ class Track(db.Model):
 
 class Interaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)  # Foreign key for users
-    track_id = db.Column(db.Integer, db.ForeignKey("track.id"), nullable=False)  # Foreign key for tracks
+    user_id = db.Column(db.Integer, nullable=False)
+    track_id = db.Column(db.String(255), nullable=False)
     action = db.Column(db.String(20), nullable=False)  # 'like' or 'scroll'
-    start_time = db.Column(db.DateTime, nullable=True, default=datetime.utcnow)
+    start_time = db.Column(db.DateTime, default=datetime.utcnow)
     end_time = db.Column(db.DateTime, nullable=True)
-
-    # Relationships
-    user = db.relationship("User", backref="interactions")
-    track = db.relationship("Track", backref="interactions")
-
-    def __init__(self, user_id, track_id, action, start_time=None, end_time=None):
-        self.user_id = user_id
-        self.track_id = track_id
-        self.action = action
-        self.start_time = start_time or datetime.utcnow()
-        self.end_time = end_time
