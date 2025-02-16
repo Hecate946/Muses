@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../services/api_service.dart';
 import '../providers/music_provider.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -9,7 +10,8 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController searchController = TextEditingController();
-  
+  final ApiService apiService = ApiService();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -51,10 +53,15 @@ class _SearchScreenState extends State<SearchScreen> {
                         border: InputBorder.none,
                         contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       ),
-                      onSubmitted: (value) {
+                      onSubmitted: (value) async {
                         if (value.isNotEmpty) {
-                          Provider.of<MusicProvider>(context, listen: false)
-                              .searchMusic(value);
+                          try {
+                            var results = await apiService.fetchMusicByInstrument(value);
+                            print("Fetched search results: $results");
+                            // You can update the provider or state with results here
+                          } catch (e) {
+                            print("Error fetching search results: $e");
+                          }
                         }
                       },
                     ),
@@ -79,7 +86,6 @@ class _SearchScreenState extends State<SearchScreen> {
               ),
             ),
             SizedBox(height: 16),
-            // Sample recommended songs - you can replace these with actual user preferences
             ...List.generate(5, (index) {
               final songData = [
                 {
@@ -131,10 +137,15 @@ class _SearchScreenState extends State<SearchScreen> {
                     songData[index]['title']!,
                     style: TextStyle(fontSize: 16),
                   ),
-                  onTap: () {
-                    Provider.of<MusicProvider>(context, listen: false)
-                        .searchMusic(songData[index]['title']!);
-                    Navigator.pop(context);
+                  onTap: () async {
+                    try {
+                      var results = await apiService.fetchMusicByInstrument(songData[index]['title']!);
+                      print("Fetched results for ${songData[index]['title']}: $results");
+                      // You can update state or navigate based on results
+                      Navigator.pop(context);
+                    } catch (e) {
+                      print("Error fetching results: $e");
+                    }
                   },
                 ),
               );

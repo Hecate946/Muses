@@ -16,9 +16,7 @@ class _MusicCardState extends State<MusicCard> {
 
   @override
   Widget build(BuildContext context) {
-    final bottomPadding = MediaQuery.of(context).padding.bottom;
-    final navBarHeight = kBottomNavigationBarHeight;
-    
+
     return Stack(
       children: [
         Container(
@@ -102,7 +100,7 @@ class _MusicCardState extends State<MusicCard> {
                     isFavorite = !isFavorite;
                   });
                   if (isFavorite) {
-                    widget.apiService.likeTrack(1, widget.musicData["id"]);
+                    widget.apiService.likeTrack(widget.musicData["id"], widget.musicData["title"]);
                   }
                 },
               ),
