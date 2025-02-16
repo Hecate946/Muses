@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:io' show Platform;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'home_screen.dart';
 import 'login_screen.dart';
@@ -16,6 +17,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
   String? _errorMessage;
   bool _isLoading = false;
 
+  String get _baseUrl {
+    // Use 10.0.2.2 for Android emulator and localhost for iOS simulator
+    return 'http://${Platform.isAndroid ? '10.0.2.2' : 'localhost'}:5000';
+  }
+
   /// ✅ Handles user registration
   Future<void> _registerUser() async {
     setState(() {
@@ -24,7 +30,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     });
 
     final response = await http.post(
-      Uri.parse("http://10.0.2.2:5000/auth/register"),
+      Uri.parse("$_baseUrl/auth/register"),
       headers: {"Content-Type": "application/json"},
       body: json.encode({
         "username": _usernameController.text,
