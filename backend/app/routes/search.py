@@ -1,14 +1,23 @@
+import requests
 from flask import Blueprint, request, jsonify
-from app import db
-from app.models import Track
 
 search_bp = Blueprint("search", __name__)
 
-@search_bp.route("/", methods=["GET"])
-def search_music():
-    instrument = request.args.get("instrument")
-    if not instrument:
-        return jsonify({"error": "Instrument required"}), 400
+MUSICBRAINZ_API = "https://musicbrainz.org/ws/2/work"
 
-    tracks = Track.query.filter(Track.instrumentation.ilike(f"%{instrument}%")).all()
-    return jsonify([{"title": track.title, "instrumentation": track.instrumentation} for track in tracks])
+@search_bp.route("/musicbrainz", methods=["GET"])
+def search_musicbrainz():
+    instrument = request.args.get("instrument", "clarinet")  # Default instrument
+    limit = request.args.get("limit", 20)  # Limit results to avoid large responses
+
+    params = {
+        "query": f"instrumentation:{instrument} OR tag:{instrument}",
+        "fmt": "json",
+        "limit": limit
+    }
+
+    response = requests.get(MUSICBRAINZ_API, params=params)
+    if response.status_code == 200:
+        print("it worked")
+        return jsonify(response.json().get("works", []))  # Only return works
+    return jsonify({"error": "Failed to fetch data"}), response.status_code
