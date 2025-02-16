@@ -108,19 +108,17 @@ class ApiService {
     }
   }
 
-  /// Get stored `user_id` from local storage
+  // User Data Methods
   Future<int?> getUserId() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getInt('user_id');
   }
 
-  /// Check if user is logged in
   Future<bool> isLoggedIn() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.containsKey('user_id') && prefs.containsKey('token');
   }
 
-  /// Get stored user data
   Future<Map<String, dynamic>> getStoredUserData() async {
     final prefs = await SharedPreferences.getInstance();
     return {
@@ -130,7 +128,6 @@ class ApiService {
     };
   }
 
-  /// Get authentication headers
   Future<Map<String, String>> getAuthHeaders() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
@@ -139,227 +136,16 @@ class ApiService {
       if (token != null) 'Authorization': 'Bearer $token',
     };
   }
-/// Track user interactions: scrolling
-  /// Fetch user profile data including metrics and activity
+
+  // User Profile Methods
   Future<Map<String, dynamic>> fetchUserProfile(int userId) async {
     final url = Uri.parse("$baseUrl/users/$userId/profile");
-    print("API Request: GET $url");
-
     try {
       final response = await http.get(url);
-      print("Response Code: ${response.statusCode}");
-      print("Response Body: ${response.body}");
-
-      if (response.statusCode == 200) {
-        return json.decode(response.body);
-      } else {
-        throw Exception("Failed to fetch user profile");
-      }
-    } catch (e) {
-      print("Error fetching user profile: $e");
-      throw Exception("Failed to fetch user profile");
-    }
-  }
-
-  /// Fetch user's learning history
-  Future<List<Map<String, dynamic>>> fetchUserHistory(int userId) async {
-    final url = Uri.parse("$baseUrl/users/$userId/history");
-    print("API Request: GET $url");
-
-    try {
-      final response = await http.get(url);
-      print("Response Code: ${response.statusCode}");
-      print("Response Body: ${response.body}");
-
-      if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        return data.cast<Map<String, dynamic>>();
-      } else {
-        throw Exception("Failed to fetch user history");
-      }
-    } catch (e) {
-      print("Error fetching user history: $e");
-      throw Exception("Failed to fetch user history");
-    }
-  }
-  /// ✅ Fetch the next 5 songs from the backend using track_id and track_name
-  Future<List<Map<String, String>>> fetchNextBatch() async {
-    final userId = await getUserId();
-    if (userId == null) {
-      print("❌ No user_id found. Can't fetch next batch.");
-      return [];
-    }
-
-    final uri = Uri.parse("$baseUrl/playback/youtube/audio_batch");
-    print("API Request: POST $uri");
-
-    final response = await http.post(
-      uri,
-      headers: {"Content-Type": "application/json"},
-      body: json.encode({"user_id": userId, "tracks": null}), // ✅ Allow backend to generate batch
-    );
-
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-
-      return List<Map<String, String>>.from(
-        data["songs"].map<Map<String, String>>((song) => {
-              "track_id": song["track_id"]?.toString() ?? "",   // ✅ Ensure it's a string
-              "track_name": song["track_name"]?.toString() ?? "", // ✅ Convert null to empty string
-              "audio_url": song["audio_url"]?.toString() ?? "", // ✅ Convert null to empty string
-            }),
-      );
-    } else {
-      print("❌ Failed to fetch next batch: ${response.statusCode}");
-      return [];
-    }
-  }
-
-
-  /// ✅ Fetch a list of music tracks based on instrumentation
-  Future<List<dynamic>> fetchMusicByInstrument(String instrument) async {
-    final url = Uri.parse("$baseUrl/search/musicbrainz?instrument=$instrument");
-    print("API Request: GET $url");
-
-    final response = await http.get(url);
-
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
-      throw Exception("Failed to fetch music");
-    }
-  }
-
-  /// ✅ Fetch YouTube audio URL using track_id and track_name
-  Future<Map<String, dynamic>?> fetchYouTubeAudio(String trackId, String trackName) async {
-    final userId = await getUserId();
-    if (userId == null) {
-      print("❌ No user_id found. Can't fetch YouTube audio.");
-      return null;
-    }
-
-    final url = Uri.parse("$baseUrl/playback/youtube/audio?user_id=$userId&track_id=$trackId&track_name=${Uri.encodeComponent(trackName)}");
-    print("API Request: GET $url");
-
-    final response = await http.get(url);
-
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
-      print("Failed to fetch YouTube audio: ${response.statusCode}");
-      return null;
-    }
-  }
-
-  /// ✅ Fetch recommended songs for a user
-  Future<List<dynamic>> fetchRecommendedSongs() async {
-    final userId = await getUserId();
-    if (userId == null) {
-      print("❌ No user_id found. Can't fetch recommendations.");
-      return [];
-    }
-
-    final url = Uri.parse("$baseUrl/recommendations?user_id=$userId");
-    print("API Request: GET $url");
-
-    final response = await http.get(url);
-
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
-      throw Exception("Failed to fetch recommended songs: ${response.statusCode}");
-    }
-  }
-
-  /// ✅ Fetch saved/liked songs for a user
-  Future<List<dynamic>> fetchSavedSongs() async {
-    final userId = await getUserId();
-    if (userId == null) {
-      print("❌ No user_id found. Can't fetch saved songs.");
-      return [];
-    }
-
-    final url = Uri.parse("$baseUrl/saved-songs?user_id=$userId");
-    print("API Request: GET $url");
-
-    final response = await http.get(url);
-
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
-      throw Exception("Failed to fetch saved songs: ${response.statusCode}");
-    }
-  }
-
-  /// ✅ Track user interactions: likes
-  Future<void> likeTrack(String trackId, String trackName) async {
-    final userId = await getUserId();
-    if (userId == null) {
-      print("❌ No user_id found. Can't like track.");
-      return;
-    }
-
-    final url = Uri.parse("$baseUrl/interactions/like");
-    final body = json.encode({"user_id": userId, "track_id": trackId, "track_name": trackName});
-
-    print("API Request: POST $url");
-    print("Request Body: $body");
-
-    final response = await http.post(url, headers: {"Content-Type": "application/json"}, body: body);
-
-    if (response.statusCode != 200) {
-      throw Exception("Failed to like track");
-    }
-  }
-
-  /// ✅ Track user interactions: scrolling
-  Future<void> trackScroll(String trackId, String trackName, String startTime, String endTime) async {
-    final userId = await getUserId();
-    if (userId == null) {
-      print("❌ No user_id found. Can't track scroll.");
-      return;
-    }
-
-    final url = Uri.parse("$baseUrl/interactions/scroll");
-    final body = json.encode({
-      "user_id": userId,
-      "track_id": trackId,
-      "track_name": trackName,
-      "start_time": startTime,
-      "end_time": endTime
-    });
-
-    print("API Request: POST $url");
-    print("Request Body: $body");
-
-    final response = await http.post(url, headers: {"Content-Type": "application/json"}, body: body);
-
-    if (response.statusCode != 200) {
-      throw Exception("Failed to track scroll");
-    }
-  }
-
-
-
-
-
- /// Track user interactions: scrolling
-  /// Fetch user profile data including metrics and activity
-
-  Future<Map<String, dynamic>> fetchUserProfile(int userId) async {
-    final url = Uri.parse("$baseUrl/users/$userId/profile");
-    print("API Request: GET $url");
-
-    try {
-      final response = await http.get(url);
-      print("Response Code: ${response.statusCode}");
-      print("Response Body: ${response.body}");
-
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-
         return {
-          "user_id": data["user_id"]?.toString() ?? "",  // Ensure it's a string
+          "user_id": data["user_id"]?.toString() ?? "",
           "username": data["username"] ?? "Unknown User",
           "total_interactions": data["total_interactions"] ?? 0,
           "recent_activity": List<Map<String, dynamic>>.from(
@@ -373,90 +159,168 @@ class ApiService {
           ),
         };
       } else {
-        print("❌ Failed to fetch user profile: ${response.statusCode}");
-        return {}; // Return empty map on failure
+        print("Failed to fetch user profile: ${response.statusCode}");
+        return {};
       }
     } catch (e) {
-      print("❌ Error fetching user profile: $e");
-      return {}; // Return empty map on failure
+      print("Error fetching user profile: $e");
+      return {};
     }
   }
 
-  /// Fetch user's learning history
   Future<List<Map<String, dynamic>>> fetchUserHistory(int userId) async {
-  final url = Uri.parse("$baseUrl/users/$userId/history");
-  print("API Request: GET $url");
-
-  try {
-    final response = await http.get(url);
-    print("Response Code: ${response.statusCode}");
-    print("Response Body: ${response.body}");
-
-    if (response.statusCode == 200) {
-      final List<dynamic> data = json.decode(response.body);
-
-      return List<Map<String, dynamic>>.from(
-        data.map(
-          (history) => {
-            "track_id": history["track_id"]?.toString() ?? "Unknown Track",
-            "action": history["action"]?.toString() ?? "Unknown Action",
-            "timestamp": history["timestamp"]?.toString() ?? "",
-          },
-        ),
-      );
-    } else {
-      print("❌ Failed to fetch user history: ${response.statusCode}");
+    final url = Uri.parse("$baseUrl/users/$userId/history");
+    try {
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return List<Map<String, dynamic>>.from(
+          data.map(
+            (history) => {
+              "track_id": history["track_id"]?.toString() ?? "Unknown Track",
+              "action": history["action"]?.toString() ?? "Unknown Action",
+              "timestamp": history["timestamp"]?.toString() ?? "",
+            },
+          ),
+        );
+      } else {
+        print("Failed to fetch user history: ${response.statusCode}");
+        return [];
+      }
+    } catch (e) {
+      print("Error fetching user history: $e");
       return [];
     }
-  } catch (e) {
-    print("❌ Error fetching user history: $e");
-    return [];
   }
-}
 
-
-  /// ✅ Logout user from backend and clear local storage
-  Future<void> logoutUser() async {
+  // Music Methods
+  Future<List<Map<String, String>>> fetchNextBatch() async {
     final userId = await getUserId();
     if (userId == null) {
-      print("❌ No user_id found. Can't log out.");
-      return;
+      print("No user_id found. Can't fetch next batch.");
+      return [];
     }
 
-    final url = Uri.parse("$baseUrl/auth/logout?user_id=$userId");
-    print("API Request: POST $url");
-
-    final response = await http.post(url, headers: {"Content-Type": "application/json"});
+    final uri = Uri.parse("$baseUrl/playback/youtube/audio_batch");
+    final response = await http.post(
+      uri,
+      headers: {"Content-Type": "application/json"},
+      body: json.encode({"user_id": userId, "tracks": null}),
+    );
 
     if (response.statusCode == 200) {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.remove("user_id"); // ✅ Remove from local storage
-      print("✅ User logged out.");
+      final data = json.decode(response.body);
+      return List<Map<String, String>>.from(
+        data["songs"].map<Map<String, String>>((song) => {
+              "track_id": song["track_id"]?.toString() ?? "",
+              "track_name": song["track_name"]?.toString() ?? "",
+              "audio_url": song["audio_url"]?.toString() ?? "",
+            }),
+      );
     } else {
-      throw Exception("Failed to log out: ${response.statusCode}");
+      print("Failed to fetch next batch: ${response.statusCode}");
+      return [];
     }
   }
-  
-  Future<void> deleteAccount() async {
+
+  Future<List<dynamic>> fetchMusicByInstrument(String instrument) async {
+    final url = Uri.parse("$baseUrl/search/musicbrainz?instrument=$instrument");
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception("Failed to fetch music");
+    }
+  }
+
+  Future<Map<String, dynamic>?> fetchYouTubeAudio(String trackId, String trackName) async {
     final userId = await getUserId();
-    if (userId == null) {
-      print("❌ No user_id found. Can't delete account.");
-      return;
-    }
+    if (userId == null) return null;
 
-    final url = Uri.parse("$baseUrl/auth/delete?user_id=$userId");
-    print("API Request: DELETE $url");
-
-    final response = await http.delete(url, headers: {"Content-Type": "application/json"});
+    final url = Uri.parse("$baseUrl/playback/youtube/audio?user_id=$userId&track_id=$trackId&track_name=${Uri.encodeComponent(trackName)}");
+    final response = await http.get(url);
 
     if (response.statusCode == 200) {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.remove("user_id"); // ✅ Remove from local storage
-      print("✅ User account deleted.");
+      return json.decode(response.body);
     } else {
-      throw Exception("Failed to delete account: ${response.statusCode}");
+      print("Failed to fetch YouTube audio: ${response.statusCode}");
+      return null;
     }
   }
 
+  Future<List<dynamic>> fetchRecommendedSongs() async {
+    final userId = await getUserId();
+    if (userId == null) return [];
 
+    final url = Uri.parse("$baseUrl/recommendations?user_id=$userId");
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception("Failed to fetch recommended songs: ${response.statusCode}");
+    }
+  }
+
+  Future<List<dynamic>> fetchSavedSongs() async {
+    final userId = await getUserId();
+    if (userId == null) return [];
+
+    final url = Uri.parse("$baseUrl/saved-songs?user_id=$userId");
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception("Failed to fetch saved songs: ${response.statusCode}");
+    }
+  }
+
+  // User Interaction Methods
+  Future<void> likeTrack(String trackId, String trackName) async {
+    final userId = await getUserId();
+    if (userId == null) return;
+
+    final url = Uri.parse("$baseUrl/interactions/like");
+    final body = json.encode({
+      "user_id": userId,
+      "track_id": trackId,
+      "track_name": trackName
+    });
+
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: body
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception("Failed to like track");
+    }
+  }
+
+  Future<void> trackScroll(String trackId, String trackName, String startTime, String endTime) async {
+    final userId = await getUserId();
+    if (userId == null) return;
+
+    final url = Uri.parse("$baseUrl/interactions/scroll");
+    final body = json.encode({
+      "user_id": userId,
+      "track_id": trackId,
+      "track_name": trackName,
+      "start_time": startTime,
+      "end_time": endTime
+    });
+
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: body
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception("Failed to track scroll");
+    }
+  }
 }
