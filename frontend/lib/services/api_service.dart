@@ -412,6 +412,76 @@ class ApiService {
     print("❌ Error fetching user history: $e");
     return [];
   }
+
+ /// Track user interactions: scrolling
+  /// Fetch user profile data including metrics and activity
+
+  Future<Map<String, dynamic>> fetchUserProfile(int userId) async {
+    final url = Uri.parse("$baseUrl/users/$userId/profile");
+    print("API Request: GET $url");
+
+    try {
+      final response = await http.get(url);
+      print("Response Code: ${response.statusCode}");
+      print("Response Body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+
+        return {
+          "user_id": data["user_id"]?.toString() ?? "",  // Ensure it's a string
+          "username": data["username"] ?? "Unknown User",
+          "total_interactions": data["total_interactions"] ?? 0,
+          "recent_activity": List<Map<String, dynamic>>.from(
+            (data["recent_activity"] ?? []).map(
+              (activity) => {
+                "track_id": activity["track_id"]?.toString() ?? "Unknown Track",
+                "action": activity["action"]?.toString() ?? "Unknown Action",
+                "timestamp": activity["timestamp"]?.toString() ?? "",
+              },
+            ),
+          ),
+        };
+      } else {
+        print("❌ Failed to fetch user profile: ${response.statusCode}");
+        return {}; // Return empty map on failure
+      }
+    } catch (e) {
+      print("❌ Error fetching user profile: $e");
+      return {}; // Return empty map on failure
+    }
+  }
+
+  /// Fetch user's learning history
+  Future<List<Map<String, dynamic>>> fetchUserHistory(int userId) async {
+  final url = Uri.parse("$baseUrl/users/$userId/history");
+  print("API Request: GET $url");
+
+  try {
+    final response = await http.get(url);
+    print("Response Code: ${response.statusCode}");
+    print("Response Body: ${response.body}");
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+
+      return List<Map<String, dynamic>>.from(
+        data.map(
+          (history) => {
+            "track_id": history["track_id"]?.toString() ?? "Unknown Track",
+            "action": history["action"]?.toString() ?? "Unknown Action",
+            "timestamp": history["timestamp"]?.toString() ?? "",
+          },
+        ),
+      );
+    } else {
+      print("❌ Failed to fetch user history: ${response.statusCode}");
+      return [];
+    }
+  } catch (e) {
+    print("❌ Error fetching user history: $e");
+    return [];
+  }
 }
 
 
