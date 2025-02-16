@@ -1,6 +1,6 @@
-# Euterpe - Music Learning Platform
+# Muses - Music Learning Platform
 
-Euterpe is a modern, interactive music learning platform that helps users discover and learn music through an engaging interface. Named after the Greek muse of music, Euterpe combines powerful music recommendation algorithms with an intuitive learning experience.
+Muses is a modern, interactive music learning platform that helps users discover and learn music through an engaging interface. Named after the Greek muse of music, Euterpe combines powerful music recommendation algorithms with an intuitive learning experience.
 
 ## Features
 
