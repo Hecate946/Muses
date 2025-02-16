@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/api_service.dart';
  
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -8,21 +9,43 @@ class ProfileScreen extends StatefulWidget {
 }
  
 class _ProfileScreenState extends State<ProfileScreen> {
-  // Sample data for demonstration
-  final List<Map<String, String>> _likedSongs = [
-    {'title': 'Song 1', 'genre': 'Genre'},
-    {'title': 'Song 2', 'genre': 'Genre'},
-    {'title': 'Song 3', 'genre': 'Genre'},
-    {'title': 'Song 4', 'genre': 'Genre'},
-  ];
- 
-  final List<String> _instruments = ['Instrument 1', 'Instrument 2', 'Instrument 3'];
- 
-  final List<Map<String, String>> _yourSongs = [
-    {'title': 'Song 1', 'genre': 'Genre'},
-    {'title': 'Song 2', 'genre': 'Genre'},
-    {'title': 'Song 3', 'genre': 'Genre'},
-  ];
+  final ApiService _apiService = ApiService();
+  bool _isLoading = true;
+  String _username = '';
+  String _joinDate = '';
+  int _songsLearned = 0;
+  List<String> _instruments = [];
+  List<Map<String, dynamic>> _recentActivity = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    setState(() => _isLoading = true);
+    try {
+      // TODO: Replace with actual user ID from auth system
+      const userId = 1;
+
+      // Fetch user profile data
+      final profileData = await _apiService.fetchUserProfile(userId);
+      final historyData = await _apiService.fetchUserHistory(userId);
+
+      setState(() {
+        _username = profileData['username'] ?? 'User';
+        _joinDate = profileData['join_date'] ?? 'January 2024';
+        _songsLearned = profileData['songs_learned'] ?? 0;
+        _instruments = List<String>.from(profileData['instruments'] ?? []);
+        _recentActivity = historyData.take(5).toList(); // Show only last 5 activities
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error loading user data: $e');
+      setState(() => _isLoading = false);
+    }
+  }
  
   @override
   Widget build(BuildContext context) {
@@ -39,7 +62,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
+        child: _isLoading
+            ? Center(child: CircularProgressIndicator())
+            : SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -56,12 +81,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       SizedBox(height: 12),
                       Text(
-                        'John Doe',
+                        _username,
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                       SizedBox(height: 4),
                       Text(
-                        'Joined January 2024',
+                        'Joined $_joinDate',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: Colors.grey[600],
                             ),
@@ -85,25 +110,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         _buildStatCard(
                           context,
                           'Songs Learned',
-                          '12',
+                          _songsLearned.toString(),
                           Icons.music_note,
                         ),
                         _buildStatCard(
                           context,
-                          'Practice Hours',
-                          '24',
-                          Icons.timer,
-                        ),
-                        _buildStatCard(
-                          context,
-                          'Achievements',
-                          '5',
-                          Icons.star,
-                        ),
-                        _buildStatCard(
-                          context,
                           'Instruments',
-                          '2',
+                          _instruments.length.toString(),
                           Icons.piano,
                         ),
                       ],
@@ -159,28 +172,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
  
   Widget _buildActivityList() {
+    if (_isLoading) {
+      return Center(child: CircularProgressIndicator());
+    }
+
+    if (_recentActivity.isEmpty) {
+      return Card(
+        child: Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Text('No recent activity'),
+        ),
+      );
+    }
+
     return Card(
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildActivityItem(
-            'Started learning Moonlight Sonata',
-            '2 hours ago',
-            Icons.music_note,
-          ),
-          Divider(height: 1),
-          _buildActivityItem(
-            'Completed daily practice goal',
-            '1 day ago',
-            Icons.check_circle,
-          ),
-          Divider(height: 1),
-          _buildActivityItem(
-            'Added new instrument: Piano',
-            '3 days ago',
-            Icons.piano,
-          ),
-        ],
+        children: _recentActivity.map((activity) {
+          IconData icon;
+          switch (activity['type']) {
+            case 'song_started':
+              icon = Icons.music_note;
+              break;
+            case 'instrument_added':
+              icon = Icons.piano;
+              break;
+            default:
+              icon = Icons.check_circle;
+          }
+
+          return Column(
+            children: [
+              _buildActivityItem(
+                activity['description'],
+                activity['time_ago'],
+                icon,
+              ),
+              if (activity != _recentActivity.last) Divider(height: 1),
+            ],
+          );
+        }).toList(),
       ),
     );
   }

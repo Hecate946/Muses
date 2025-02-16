@@ -8,7 +8,7 @@ class ApiService {
     return Platform.isAndroid ? '10.0.2.2' : 'localhost';
   }
 
-  static String get baseUrl => 'http://$_baseHost:5000/';
+  static String get baseUrl => 'http://$_baseHost:5000';
 
   /// Fetch a list of music tracks based on instrumentation
   Future<List<dynamic>> fetchMusicByInstrument(String instrument) async {
@@ -98,6 +98,49 @@ class ApiService {
   }
 
   /// Track user interactions: scrolling
+  /// Fetch user profile data including metrics and activity
+  Future<Map<String, dynamic>> fetchUserProfile(int userId) async {
+    final url = Uri.parse("$baseUrl/users/$userId/profile");
+    print("API Request: GET $url");
+
+    try {
+      final response = await http.get(url);
+      print("Response Code: ${response.statusCode}");
+      print("Response Body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        throw Exception("Failed to fetch user profile");
+      }
+    } catch (e) {
+      print("Error fetching user profile: $e");
+      throw Exception("Failed to fetch user profile");
+    }
+  }
+
+  /// Fetch user's learning history
+  Future<List<Map<String, dynamic>>> fetchUserHistory(int userId) async {
+    final url = Uri.parse("$baseUrl/users/$userId/history");
+    print("API Request: GET $url");
+
+    try {
+      final response = await http.get(url);
+      print("Response Code: ${response.statusCode}");
+      print("Response Body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data.cast<Map<String, dynamic>>();
+      } else {
+        throw Exception("Failed to fetch user history");
+      }
+    } catch (e) {
+      print("Error fetching user history: $e");
+      throw Exception("Failed to fetch user history");
+    }
+  }
+
   Future<void> trackScroll(int userId, String trackId, String startTime, String endTime) async {
     final url = Uri.parse("$baseUrl/interactions/scroll");
     final body = json.encode({
