@@ -34,10 +34,12 @@ def create_app():
     from app.routes.recommendations import recommendations_bp
     from app.routes.playback import playback_bp
     from app.routes.interactions import interactions_bp
+    from app.routes.auth import auth_bp  # ✅ Import auth routes
 
     app.register_blueprint(search_bp, url_prefix="/search")
     app.register_blueprint(recommendations_bp, url_prefix="/recommendations")
     app.register_blueprint(playback_bp, url_prefix="/playback")
     app.register_blueprint(interactions_bp, url_prefix="/interactions")
+    app.register_blueprint(auth_bp, url_prefix="/auth")  # ✅ Register auth blueprint
 
     return app

@@ -7,6 +7,7 @@ MUSICBRAINZ_API = "https://musicbrainz.org/ws/2/work"
 
 @search_bp.route("/musicbrainz", methods=["GET"])
 def search_musicbrainz():
+    """Search MusicBrainz for works by instrumentation and return IDs."""
     instrument = request.args.get("instrument", "clarinet")  # Default instrument
     limit = request.args.get("limit", 10)  # Limit results
 
@@ -20,7 +21,15 @@ def search_musicbrainz():
     
     if response.status_code == 200:
         works = response.json().get("works", [])
-        track_names = [{"title": work.get("title", "Unknown")} for work in works]
-        return jsonify(track_names)
+
+        # ✅ Return track title + unique MusicBrainz ID
+        track_data = [
+            {
+                "title": work.get("title", "Unknown"),
+                "track_id": work.get("id", "unknown-id")  # ✅ Use track ID
+            }
+            for work in works
+        ]
+        return jsonify(track_data)
 
     return jsonify({"error": "Failed to fetch data"}), response.status_code

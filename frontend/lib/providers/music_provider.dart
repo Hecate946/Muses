@@ -1,34 +1,106 @@
 import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart';
 import '../services/api_service.dart';
 
 class MusicProvider extends ChangeNotifier {
   final ApiService _apiService = ApiService();
-  List<dynamic> _musicList = [];
-  bool _isLoading = false;
+  final AudioPlayer _audioPlayer = AudioPlayer();
 
-  List<dynamic> get musicList => _musicList;
+  List<Map<String, String>> _queue = [];
+  bool _isLoading = false;
+  String? _currentAudioUrl;
+  int _currentIndex = -1;
+
+  List<Map<String, String>> get queue => _queue;
   bool get isLoading => _isLoading;
+  String? get currentAudioUrl => _currentAudioUrl;
 
   MusicProvider() {
-    // Automatically load music when the provider initializes
-    searchMusic("violin");
+    initializeQueue(); // ✅ Start by fetching the first batch of songs
   }
 
-  Future<void> searchMusic(String instrument) async {
+  /// ✅ Initializes the queue with the first batch of 5 songs
+  Future<void> initializeQueue() async {
+    if (_queue.isEmpty) {
+      await fetchNextBatch(); // ✅ Fetch the first batch
+    } else {
+      playTrack(0);
+    }
+  }
+
+  /// ✅ Fetches the next 5 songs from the backend using track_id and track_name
+  Future<void> fetchNextBatch() async {
+    if (_isLoading) return; // Prevent duplicate requests
     _isLoading = true;
     notifyListeners();
 
-    print("Fetching music for instrument: $instrument"); // Debugging print
-
     try {
-      _musicList = await _apiService.fetchMusicByInstrument(instrument);
-      print("Fetched ${_musicList.length} tracks"); // Debugging print
+      final newTracks = await _apiService.fetchNextBatch();
+      if (newTracks.isNotEmpty) {
+        _queue.addAll(newTracks.map((track) => {
+              "track_id": track["track_id"] ?? "",
+              "track_name": track["track_name"] ?? "",
+              "audio_url": track["audio_url"] ?? "",
+            }));
+        print("✅ Prefetched next batch (${newTracks.length} songs)");
+      } else {
+        print("⚠️ No more songs available.");
+      }
     } catch (e) {
-      print("Error fetching music: $e"); // Debugging print
-      _musicList = [];
+      print("❌ Error fetching next batch: $e");
     }
 
     _isLoading = false;
+    notifyListeners();
+  }
+
+  /// ✅ Plays a new track and requests the next batch if needed
+  Future<void> playTrack(int index) async {
+    if (index < 0 || index >= _queue.length || index == _currentIndex) return;
+
+    print("🎶 Switching to track: ${_queue[index]["track_name"]}");
+
+    stopAudio();
+    _currentIndex = index;
+    _currentAudioUrl = null;
+    notifyListeners();
+
+    String? audioUrl = _queue[index]["audio_url"];
+    String trackId = _queue[index]["track_id"]!;
+    String trackName = _queue[index]["track_name"]!;
+
+    print("🎵 Prefetched URL: $audioUrl");
+    print("🎵 Prefetched URL: $trackId");
+    print("🎵 Prefetched URL: $trackName");
+
+    if (audioUrl == null || audioUrl.isEmpty) {
+      print("⚠️ No prefetched URL. Fetching now...");
+      final audioData = await _apiService.fetchYouTubeAudio(trackId, trackName);
+      audioUrl = audioData?["audio_url"];
+    }
+
+    if (audioUrl != null && audioUrl.isNotEmpty) {
+      _currentAudioUrl = audioUrl;
+      print("🎵 Now playing: $_currentAudioUrl");
+
+      await _audioPlayer.setSourceUrl(_currentAudioUrl!);
+      await _audioPlayer.setVolume(1.0);
+      _audioPlayer.resume();
+    } else {
+      print("❌ Failed to get audio URL for: ${_queue[index]["track_name"]}");
+    }
+
+    // ✅ Fetch next batch when we're close to running out
+    if (index >= _queue.length - 3) {
+      fetchNextBatch();
+    }
+
+    notifyListeners();
+  }
+
+  /// ✅ Stops the audio instantly when a new page settles
+  void stopAudio() {
+    _audioPlayer.stop();
     notifyListeners();
   }
 }

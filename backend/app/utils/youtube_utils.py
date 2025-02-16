@@ -2,7 +2,8 @@ import yt_dlp
 import traceback
 import json
 
-def get_audio_url(query):
+
+def fetch_audio_url(query):
     """
     Given a search query, use yt-dlp to find the best audio stream URL without downloading.
     Returns a JSON object with {"audio_url": audio_url} or None if extraction fails.
@@ -37,7 +38,7 @@ def get_audio_url(query):
             return json.dumps({"error": "Audio URL not found."})
 
         print(f"🎶 Extracted Audio URL: {audio_url}")
-        return json.dumps({"audio_url": audio_url})  # Return JSON object
+        return audio_url  # Return JSON object
 
     except Exception as e:
         print(f"❌ Error extracting audio URL: {e}")
